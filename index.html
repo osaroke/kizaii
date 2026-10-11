@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RACK NOTE">
+<meta name="theme-color" content="#11131a">
+<title>RACK NOTE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: スタジオのラック棚。上に種類切替、フォルダ＝ラックのカード、下に固定ナビ */
+/* Layout: スタジオのラック棚 × サイバーポップ。背景にネオンの光とグリッド、上に種類切替、フォルダ＝ラックのカード、下に固定ナビ */
+:root{
+  --bg:#0d0f1f; --panel:rgba(26,29,58,.72); --panel2:rgba(44,48,92,.9); --field:rgba(10,12,28,.75); --line:rgba(120,130,220,.22);
+  --fg:#eef0ff; --muted:#9097c2; --accent:#5ef2e0; --idea:#ffb84d; --ink:#0d0f1f;
+  --g1:#ff4fd8; --g2:#3d7bff; --g3:#5ef2e0;
+  --danger:#ff6b81;
+  --font-display:"Chakra Petch","Zen Kaku Gothic New",system-ui,sans-serif;
+  --font-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  --r:14px;
+  color-scheme:dark;
+}
+/* カラーテーマ（7ダーク＋1ライト） */
+[data-skin="pink"]{--bg:#170a1f;--panel:rgba(48,20,58,.72);--panel2:rgba(80,34,92,.9);--field:rgba(20,8,26,.75);--line:rgba(255,120,210,.22);--fg:#fff0fa;--muted:#c094b8;--accent:#ff5fc8;--idea:#ffd25e;--ink:#170a1f;--g1:#ff5fc8;--g2:#8a5cff;--g3:#ff8fd8}
+[data-skin="blue"]{--bg:#060d1f;--panel:rgba(16,30,64,.72);--panel2:rgba(28,52,104,.9);--field:rgba(4,10,26,.75);--line:rgba(90,160,255,.22);--fg:#eaf4ff;--muted:#8aa2c8;--accent:#4fb6ff;--idea:#ffcf5c;--ink:#060d1f;--g1:#2b6bff;--g2:#00d5ff;--g3:#7aa8ff}
+[data-skin="grape"]{--bg:#120b26;--panel:rgba(38,26,72,.72);--panel2:rgba(64,44,116,.9);--field:rgba(14,8,30,.75);--line:rgba(180,140,255,.24);--fg:#f3eeff;--muted:#a597c8;--accent:#c6ff5e;--idea:#ff9de2;--ink:#120b26;--g1:#7c4dff;--g2:#ff6ad5;--g3:#c6ff5e}
+[data-skin="sunset"]{--bg:#1a0c16;--panel:rgba(56,24,40,.72);--panel2:rgba(92,40,62,.9);--field:rgba(24,8,18,.75);--line:rgba(255,140,120,.22);--fg:#fff1ec;--muted:#c49a9e;--accent:#ff8a5c;--idea:#ffd36b;--ink:#1a0c16;--g1:#ff4f7b;--g2:#ff9d4f;--g3:#a35cff}
+[data-skin="hacker"]{--bg:#040e0c;--panel:rgba(10,36,30,.72);--panel2:rgba(18,60,50,.9);--field:rgba(2,12,10,.75);--line:rgba(77,255,166,.2);--fg:#e8fff4;--muted:#86b8a2;--accent:#4dffa6;--idea:#e6ff5c;--ink:#040e0c;--g1:#00c27a;--g2:#00e0c6;--g3:#4dffa6}
+[data-skin="berry"]{--bg:#1c0a10;--panel:rgba(58,20,34,.72);--panel2:rgba(96,32,54,.9);--field:rgba(26,8,14,.75);--line:rgba(255,120,150,.22);--fg:#fff0f3;--muted:#c99aa6;--accent:#ff6b8f;--idea:#ffe08a;--ink:#1c0a10;--g1:#ff3d6e;--g2:#ffa3c2;--g3:#ff7a5c}
+[data-skin="milk"]{--bg:#f3f0fb;--panel:rgba(255,255,255,.78);--panel2:#ffffff;--field:rgba(255,255,255,.9);--line:rgba(120,100,180,.2);--fg:#26203d;--muted:#7a7396;--accent:#e04fb0;--idea:#e08a1e;--ink:#ffffff;--g1:#ff8fd8;--g2:#8fb8ff;--g3:#b48cff;color-scheme:light}
+
+/* 背景アニメーション */
+.bgfx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:var(--bg)}
+.orb{position:absolute;width:70vmax;height:70vmax;border-radius:50%;opacity:.38;will-change:transform}
+.o1{background:radial-gradient(circle,var(--g1) 0,transparent 62%);top:-30vmax;left:-25vmax;animation:drift1 22s ease-in-out infinite alternate}
+.o2{background:radial-gradient(circle,var(--g2) 0,transparent 62%);top:20vh;right:-35vmax;animation:drift2 26s ease-in-out infinite alternate}
+.o3{background:radial-gradient(circle,var(--g3) 0,transparent 60%);bottom:-40vmax;left:-10vmax;opacity:.22;animation:drift3 30s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(18vmax,22vmax) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-20vmax,-10vmax) scale(.9)}}
+@keyframes drift3{to{transform:translate(25vmax,-15vmax) scale(1.1)}}
+.gridfloor{position:absolute;left:-50%;right:-50%;bottom:-6%;height:46%;
+  background-image:linear-gradient(var(--g3) 1px,transparent 1px),linear-gradient(90deg,var(--g3) 1px,transparent 1px);
+  background-size:44px 44px;transform:perspective(260px) rotateX(62deg);transform-origin:bottom;opacity:.2;
+  -webkit-mask-image:linear-gradient(to top,#000 10%,transparent 90%);mask-image:linear-gradient(to top,#000 10%,transparent 90%);
+  animation:gridrun 3.2s linear infinite}
+@keyframes gridrun{to{background-position:0 44px}}
+.scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.025) 3px 4px)}
+.spark{position:absolute;color:var(--g3);font-size:12px;opacity:0;animation:twinkle 4s ease-in-out infinite;text-shadow:0 0 8px currentColor}
+.spark:nth-child(3n){color:var(--g1)}
+.spark:nth-child(3n+1){color:var(--accent)}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.5) rotate(0)}50%{opacity:.9;transform:scale(1.1) rotate(45deg)}}
+[data-skin="milk"] .orb{opacity:.45}
+[data-skin="milk"] .gridfloor{opacity:.28}
+html.noanim .bgfx *{animation:none!important}
+html.noanim .spark{opacity:.5}
+@media (prefers-reduced-motion:reduce){.bgfx *{animation:none!important}.spark{opacity:.5}}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg)}
+body{background:transparent!important}
+html{background:var(--bg)}
+body{font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh;
+  padding:0 16px calc(84px + env(safe-area-inset-bottom,0px));}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  margin:0 -16px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;
+  display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--font-display);font-weight:700;letter-spacing:.14em;font-size:18px;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;font-family:var(--font-body);font-weight:500;letter-spacing:.04em;font-size:11px;color:var(--muted)}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);
+  display:grid;place-items:center;font-size:17px;flex:none}
+.back{font-size:20px}
+
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:3px;margin-top:14px}
+.seg button{flex:1;border:0;background:none;padding:9px 4px;border-radius:9px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--panel2);color:var(--fg);box-shadow:inset 0 -2px 0 var(--accent)}
+.seg.shelf{margin-top:8px}
+.seg.shelf button{font-size:13px;padding-block:6px}
+.seg.shelf small{opacity:.7;font-variant-numeric:tabular-nums;margin-left:2px}
+
+.search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:0 12px;margin-top:12px}
+.search input{flex:1;min-width:0;border:0;background:none;padding:11px 0;outline:none}
+
+.label{font-family:var(--font-display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  margin:22px 2px 8px;display:flex;justify-content:space-between;align-items:center}
+.label button{border:0;background:none;color:var(--accent);font-family:var(--font-body);letter-spacing:.02em;font-size:13px;text-transform:none;padding:0}
+
+/* 構成バー */
+.meter{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--panel);border:1px solid var(--line)}
+.meter i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{width:8px;height:8px;border-radius:2px;display:inline-block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .n{font-family:var(--font-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .t{font-size:11px;color:var(--muted)}
+
+/* フォルダ（ラック） */
+.racks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rack{position:relative;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:var(--r);
+  padding:12px 12px 12px 14px;min-height:96px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.rack::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.rack .screws{position:absolute;right:10px;top:10px;display:flex;gap:4px}
+.rack .screws i{width:5px;height:5px;border-radius:50%;background:var(--line)}
+.rack .nm{font-weight:700;font-size:15px;line-height:1.3;padding-right:22px;word-break:break-all}
+.rack .ct{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--c);line-height:1;font-variant-numeric:tabular-nums;margin-top:auto}
+.rack .ct small{font-family:var(--font-body);font-size:11px;color:var(--muted);font-weight:500;margin-left:4px}
+.rack .chips{display:flex;gap:3px;flex-wrap:wrap}
+.rack .chips i{width:14px;height:5px;border-radius:2px;background:var(--c);opacity:.55}
+.rack.add{border-style:dashed;background:none;align-items:center;justify-content:center;color:var(--muted);font-weight:700}
+.rack.add::before{display:none}
+
+/* 製品リスト */
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;gap:12px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--panel);
+  border-radius:var(--r);padding:10px 12px}
+.mono{width:44px;height:44px;flex:none;border-radius:10px;display:grid;place-items:center;font-family:var(--font-display);
+  font-weight:700;font-size:17px;color:#14122a;background:var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 45%,transparent)}
+.item .body{flex:1;min-width:0}
+.item .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.pill{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.want{border-color:var(--idea);color:var(--idea)}
+
+.pill.hide{opacity:.75}
+.pill.gone{border-color:#e8775a;color:#e8775a}
+.item.r-hide .nm,.item.r-gone .nm{opacity:.55}
+.item.r-gone .nm{text-decoration:line-through}
+.pill.trial{border-color:var(--accent);color:var(--accent)}
+.bulb{font-size:12px;color:var(--idea);font-variant-numeric:tabular-nums;white-space:nowrap}
+.star{color:var(--idea)}
+
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:26px 16px;text-align:center;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--fg);margin-bottom:4px}
+
+.chiprow{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none}
+.chiprow::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.chip.on{border-color:var(--accent);color:var(--fg)}
+
+/* 詳細 */
+.hero{display:flex;gap:14px;align-items:center;margin-top:16px}
+.hero .mono{width:64px;height:64px;font-size:24px;border-radius:14px}
+.hero h1{font-size:21px;line-height:1.3;margin:0;word-break:break-all;text-wrap:balance}
+.hero .sub{color:var(--muted);font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-top:14px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;word-break:break-all}
+.memo{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;white-space:pre-wrap;word-break:break-all;font-size:14px}
+.idea{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.idea .tick{width:26px;height:26px;flex:none;border-radius:50%;border:2px solid var(--idea);background:none;display:grid;place-items:center;font-size:13px;color:var(--ink);margin-top:1px}
+.idea.done .tick{background:var(--idea)}
+.idea .tx{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all;font-size:14px}
+.idea.done .tx{color:var(--muted)}
+.idea .dt{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+.idea .from{font-size:12px;color:var(--accent);display:block;margin-bottom:2px;border:0;background:none;padding:0;text-align:left}
+.idea .x{border:0;background:none;color:var(--muted);font-size:15px;padding:2px 4px;flex:none}
+.ideaadd{display:flex;gap:8px;margin-top:8px}
+.ideaadd textarea{flex:1;min-width:0;resize:none;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--panel);padding:10px 12px;outline:none}
+.ideaadd button{flex:none;border:0;border-radius:12px;background:var(--idea);color:var(--ink);font-weight:700;padding:0 16px}
+
+.btnrow{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.btn{flex:1;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px;font-weight:700;min-width:120px}
+.btn.primary{background:linear-gradient(120deg,var(--accent),color-mix(in srgb,var(--accent) 55%,var(--g1)));border-color:transparent;color:var(--ink);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 35%,transparent)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+
+/* FAB */
+.fab{position:fixed;right:18px;bottom:calc(78px + env(safe-area-inset-bottom,0px));width:56px;height:56px;border-radius:18px;border:0;
+  background:linear-gradient(135deg,var(--accent),var(--g1));color:var(--ink);font-size:30px;font-weight:700;box-shadow:0 0 0 1px rgba(255,255,255,.15),0 8px 26px color-mix(in srgb,var(--g1) 45%,transparent);z-index:15;line-height:1}
+
+/* 下ナビ */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--bg) 75%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(4,1fr);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav.tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0;color:var(--muted);font-size:11px;font-weight:700}
+nav.tabs button span{font-size:19px;line-height:1.2}
+nav.tabs button.on{color:var(--accent)}
+
+/* シート */
+.scrim{position:fixed;inset:0;background:rgba(5,6,10,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:90vh;overflow-y:auto;background:var(--panel);border-radius:20px 20px 0 0;border-top:1px solid var(--line);
+  padding:8px 16px calc(20px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 10px}
+.sheet h2{font-size:17px;margin:4px 0 12px}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--field);border-radius:10px;padding:10px 12px;outline:none;width:100%;font-size:16px}
+.field textarea{min-height:90px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatches button{width:32px;height:32px;border-radius:9px;border:2px solid transparent;background:var(--c)}
+.swatches button.on{border-color:var(--fg)}
+.toggle{display:flex;gap:6px;flex-wrap:wrap}
+.toggle button{border:1px solid var(--line);background:var(--field);border-radius:99px;padding:6px 14px;font-size:14px;color:var(--muted)}
+.toggle button.on{border-color:var(--accent);color:var(--fg)}
+.frow{display:flex;align-items:center;gap:8px;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.frow .dot{width:12px;height:12px;border-radius:4px;background:var(--c);flex:none}
+.frow .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow button{border:1px solid var(--line);background:var(--panel);border-radius:8px;width:32px;height:32px;flex:none}
+.note{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);
+  padding:8px 16px;border-radius:99px;font-size:13px;font-weight:700;z-index:60;white-space:nowrap}
+.pad{height:8px}
+.mtools{display:flex;justify-content:flex-end;margin:-4px 0 6px}
+.mtools button{border:0;background:none;color:var(--accent);font-size:13px;padding:2px}
+.mgroup{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.mgroup.open{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.mhead{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:13px 14px;text-align:left}
+.mname{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pips{display:flex;gap:3px;flex:none}
+.pips i{width:6px;height:6px;border-radius:50%}
+.mct{font-family:var(--font-display);font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);min-width:22px;text-align:right}
+.chev{color:var(--muted);font-size:18px;line-height:1;transition:transform .2s;flex:none}
+.mgroup.open .chev{transform:rotate(90deg);color:var(--accent)}
+.mlist{padding:0 8px 8px;animation:fold .2s ease-out}
+.mlist .item{background:var(--field)}
+@keyframes fold{from{opacity:0;transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.mlist{animation:none}}
+.logo{background:linear-gradient(90deg,var(--accent),var(--g1) 55%,var(--g2));-webkit-background-clip:text;background-clip:text;color:transparent;
+  background-size:200% 100%;animation:shine 6s linear infinite}
+@keyframes shine{to{background-position:200% 0}}
+.tw{color:var(--g1);font-size:13px;display:inline-block;animation:twinkle2 2.4s ease-in-out infinite;text-shadow:0 0 8px currentColor}
+@keyframes twinkle2{50%{transform:scale(.6) rotate(45deg);opacity:.5}}
+html.noanim .logo,html.noanim .tw{animation:none}
+.rack{backdrop-filter:none;transition:transform .15s,box-shadow .2s}
+.rack:active{transform:scale(.97)}
+.rack:not(.add){box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 0 1px color-mix(in srgb,var(--c) 18%,transparent)}
+.seg button.on{box-shadow:inset 0 -2px 0 var(--accent),0 0 14px color-mix(in srgb,var(--accent) 22%,transparent)}
+.themes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.th{border:2px solid var(--line);border-radius:12px;padding:0;overflow:hidden;background:none;display:flex;flex-direction:column}
+.th .pv{height:44px;background:radial-gradient(circle at 25% 30%,var(--a) 0,transparent 55%),radial-gradient(circle at 80% 70%,var(--b) 0,transparent 55%),var(--k)}
+.th span{font-size:11px;padding:4px 2px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--panel)}
+.th.on{border-color:var(--accent)}
+.th.on span{color:var(--fg)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.switch b{font-weight:700}
+.sw{width:50px;height:30px;border-radius:99px;border:0;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on{background:var(--accent)}
+.sw.on::after{left:23px}
+.grip{flex:none;width:30px;height:44px;display:grid;place-items:center;color:var(--muted);font-size:18px;touch-action:none;cursor:grab;margin-left:-6px}
+.frow .grip{height:32px;width:26px;margin:0}
+.dragging{border-color:var(--accent)!important;box-shadow:0 8px 20px rgba(0,0,0,.45);position:relative;z-index:5}
+.dragging .grip{color:var(--accent)}
+.sortnote{font-size:12px;color:var(--muted);margin:-2px 2px 8px}
+.swatches button.same{background:none;border:2px dashed var(--line);width:auto;padding:0 10px;font-size:12px;color:var(--muted)}
+.swatches button.same.on{border-style:solid;border-color:var(--fg);color:var(--fg)}
+.maker{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:13px;color:var(--muted);margin:16px 2px 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.maker span{font-family:var(--font-display);font-variant-numeric:tabular-nums}
+.banner{display:flex;gap:12px;align-items:center;width:100%;text-align:left;margin-top:14px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel));border-radius:var(--r);padding:12px 14px}
+.banner b{display:block}
+.banner small{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="bgfx" id="bgfx" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i><div class="gridfloor"></div><div class="scan"></div></div>
+<div id="app"></div>
+<button class="fab" id="fab" aria-label="製品を追加">＋</button>
+<nav class="tabs" id="tabs">
+  <button data-go="inst"><span>🎹</span>音源</button>
+  <button data-go="fx"><span>🎛️</span>プラグイン</button>
+  <button data-go="ideas"><span>💡</span>アイデア</button>
+  <button data-go="settings"><span>⚙️</span>設定</button>
+</nav>
+<div id="layer"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(() => {
+const KEY = 'racknote.v1';
+const COLORS = ['#f07ca8','#f2b45a','#e8775a','#9bd16b','#6fd3c7','#62a8f0','#9a8cf2','#c98be8','#d6d2c4','#7f8aa8','#4fb3a0','#e0a3c9','#b5c45a','#5a7ff0','#f09a5a','#c4a27a','#8fd6f2','#d97fd0'];
+const PRESET = {"fx":[["FIRETHECLIP","Acqua","歪み・サチュレーション","VST2","ZL（ゼロレイテンシー）版 FIRETHECLIPZL あり。クリッパー"],["Comeback Kid","BABY Audio","ディレイ","VST3",""],["Crystalline","BABY Audio","リバーブ","VST3",""],["IHNY-2","BABY Audio","コンプ・ダイナミクス","VST3","パラレルコンプ"],["Parallel Aggressor","BABY Audio","コンプ・ダイナミクス","VST3",""],["Smooth Operator","BABY Audio","EQ","VST3","スペクトルバランス調整"],["Spaced Out","BABY Audio","リバーブ","VST3","リバーブ＋ディレイ"],["Super VHS","BABY Audio","歪み・サチュレーション","VST3","ローファイ"],["TAIP","BABY Audio","歪み・サチュレーション","VST3","テープサチュレーション"],["Transit","BABY Audio","マルチエフェクト","VST3","トランジション用マルチFX"],["Pro-Q 3","FabFilter","EQ","VST3",""],["Nectar 4","iZotope","ボーカル処理","VST3",""],["Neoverb","iZotope","リバーブ","VST3",""],["Neutron 4","iZotope","チャンネルストリップ","VST3","モジュール：Compressor / Equalizer / Exciter / Gate / Sculptor / Transient Shaper / Unmask / Visual Mixer 単体コンポーネント8種（Equalizer / Compressor / Gate など）は本体に内包"],["Ozone 11","iZotope","マスタリング","VST3",""],["RX 9 Voice De-noise","iZotope","修復・ノイズ除去","VST3",""],["VocalSynth 2","iZotope","ボーカル処理","VST3",""],["Trash 2","iZotope","歪み・サチュレーション","VST3",""],["Relay","iZotope","ユーティリティ","VST3",""],["Tonal Balance Control 2","iZotope","メーター・分析","VST3",""],["CenterOne3","Leapwing Audio","空間・ステレオ","VST3",""],["StageOne2","Leapwing Audio","空間・ステレオ","VST3",""],["UltraVox2","Leapwing Audio","ボーカル処理","VST3",""],["GainMatch","LetiMix","ユーティリティ","VST3","音量合わせ"],["Bite","Native Instruments","歪み・サチュレーション","VST3","ビットクラッシャー"],["Choral","Native Instruments","モジュレーション","VST3",""],["Dirt","Native Instruments","歪み・サチュレーション","VST3",""],["Driver","Native Instruments","歪み・サチュレーション","VST3","ディストーション＋フィルター"],["Enhanced EQ","Native Instruments","EQ","VST3",""],["Flair","Native Instruments","モジュレーション","VST3",""],["FM8 FX","Native Instruments","マルチエフェクト","VST3",""],["Freak","Native Instruments","モジュレーション","VST3",""],["Passive EQ","Native Instruments","EQ","VST3",""],["Phasis","Native Instruments","モジュレーション","VST3",""],["Raum","Native Instruments","リバーブ","VST3",""],["RC 24","Native Instruments","リバーブ","VST3",""],["RC 48","Native Instruments","リバーブ","VST3",""],["Reaktor 6 FX","Native Instruments","マルチエフェクト","VST3",""],["Replika XT","Native Instruments","ディレイ","VST3",""],["Solid Bus Comp","Native Instruments","コンプ・ダイナミクス","VST3",""],["Solid Dynamics","Native Instruments","コンプ・ダイナミクス","VST3",""],["Solid EQ","Native Instruments","EQ","VST3",""],["Supercharger","Native Instruments","コンプ・ダイナミクス","VST3",""],["Supercharger GT","Native Instruments","コンプ・ダイナミクス","VST3",""],["Transient Master","Native Instruments","コンプ・ダイナミクス","VST3",""],["Vari Comp","Native Instruments","コンプ・ダイナミクス","VST3",""],["VC 160","Native Instruments","コンプ・ダイナミクス","VST3",""],["VC 2A","Native Instruments","コンプ・ダイナミクス","VST3",""],["VC 76","Native Instruments","コンプ・ダイナミクス","VST3",""],["Absynth 5 FX","Native Instruments","マルチエフェクト","VST2","Surround 版あり"],["Maschine 2 FX","Native Instruments","マルチエフェクト","VST2",""],["RIME","Neumann","ユーティリティ","VST3","ヘッドホン用の部屋鳴り再現（モニタリング）"],["soothe2","oeksound","コンプ・ダイナミクス","VST3","耳に痛い共振を自動で抑える"],["Dirty Tape","Softube","歪み・サチュレーション","VST3","テープ・ローファイ"],["Basslane Pro","Tone Projects","低音処理","VST3","低域のモノ化・整理"],["Kelvin","Tone Projects","歪み・サチュレーション","VST3",""],["Unisum","Tone Projects","コンプ・ダイナミクス","VST3",""],["UADx 1176 Rev A Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx 1176AE Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx 1176LN Rev E Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx API 2500 Bus Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx API Vision Channel Strip","Universal Audio (UADx)","チャンネルストリップ","VST3",""],["UADx Brigade Chorus","Universal Audio (UADx)","モジュレーション","VST3",""],["UADx Century Tube Channel Strip","Universal Audio (UADx)","チャンネルストリップ","VST3",""],["UADx Galaxy Tape Echo","Universal Audio (UADx)","ディレイ","VST3",""],["UADx Hitsville EQ","Universal Audio (UADx)","EQ","VST3",""],["UADx Hitsville EQ Mastering","Universal Audio (UADx)","EQ","VST3",""],["UADx Hitsville Reverb Chambers","Universal Audio (UADx)","リバーブ","VST3",""],["UADx LA-2 Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx LA-2A Gray Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx LA-2A Silver Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx LA-2A Tube Compressor","Universal Audio (UADx)","コンプ・ダイナミクス","VST3",""],["UADx Lexicon 224 Digital Reverb","Universal Audio (UADx)","リバーブ","VST3",""],["UADx Oxide Tape Recorder","Universal Audio (UADx)","歪み・サチュレーション","VST3",""],["UADx Pultec EQP-1A EQ","Universal Audio (UADx)","EQ","VST3",""],["UADx Pultec HLF-3C EQ","Universal Audio (UADx)","EQ","VST3",""],["UADx Pultec MEQ-5 EQ","Universal Audio (UADx)","EQ","VST3",""],["UADx Pure Plate Reverb","Universal Audio (UADx)","リバーブ","VST3",""],["UADx Studer A800 Tape Recorder","Universal Audio (UADx)","歪み・サチュレーション","VST3",""],["UADx Studio D Chorus","Universal Audio (UADx)","モジュレーション","VST3",""],["UADx Waterfall Rotary Speaker","Universal Audio (UADx)","モジュレーション","VST3",""],["CurveEQ","Voxengo","EQ","VST3",""],["AudioTrack","Waves","チャンネルストリップ","VST3","Mono / Stereo 版あり"],["C1","Waves","コンプ・ダイナミクス","VST3","comp / comp-gate / comp-sc / gate（Mono / Stereo 版あり）"],["C4","Waves","コンプ・ダイナミクス","VST3","マルチバンド。Mono / Stereo 版あり"],["Center","Waves","空間・ステレオ","VST3",""],["CLA Bass","Waves","シグネチャー系","VST3",""],["CLA Drums","Waves","シグネチャー系","VST3",""],["CLA EchoSphere","Waves","シグネチャー系","VST3",""],["CLA Effects","Waves","シグネチャー系","VST3",""],["CLA Guitars","Waves","シグネチャー系","VST3",""],["CLA Unplugged","Waves","シグネチャー系","VST3",""],["CLA Vocals","Waves","シグネチャー系","VST3",""],["DeEsser","Waves","ボーカル処理","VST3","Mono / Stereo 版あり"],["Doppler","Waves","空間・ステレオ","VST3",""],["Doubler2","Waves","モジュレーション","VST3","ダブリング"],["Doubler4","Waves","モジュレーション","VST3","ダブリング"],["EMO-F2","Waves","EQ","VST3","フィルター"],["EMO-Generator","Waves","ユーティリティ","VST3","テスト信号"],["EMO-Q4","Waves","EQ","VST3",""],["Enigma","Waves","モジュレーション","VST3",""],["GTR Amp","Waves","ギター・アンプ","VST3","2Cab 版あり"],["GTR Stomp","Waves","ギター・アンプ","VST3","2 / 4 / 6 スロット"],["GTR Tool Rack","Waves","ギター・アンプ","VST3",""],["GTR Tuner","Waves","ギター・アンプ","VST3",""],["GW MixCentric","Waves","マスタリング","VST3",""],["GW PianoCentric","Waves","シグネチャー系","VST3",""],["GW ToneCentric","Waves","歪み・サチュレーション","VST3",""],["GW VoiceCentric","Waves","ボーカル処理","VST3",""],["H-Comp","Waves","コンプ・ダイナミクス","VST3",""],["H-Delay","Waves","ディレイ","VST3",""],["IR-L","Waves","リバーブ","VST3","efficient / full 版あり"],["J37","Waves","歪み・サチュレーション","VST3","テープ"],["JJP-Bass","Waves","シグネチャー系","VST3",""],["JJP-Cymbals & Percussion","Waves","シグネチャー系","VST3",""],["JJP-Drums","Waves","シグネチャー系","VST3",""],["JJP-Guitars","Waves","シグネチャー系","VST3",""],["JJP-Strings & Keys","Waves","シグネチャー系","VST3",""],["JJP-Vocals","Waves","シグネチャー系","VST3",""],["L1 Limiter","Waves","マスタリング","VST3",""],["L1+ Ultramaximizer","Waves","マスタリング","VST3",""],["L2","Waves","マスタリング","VST3",""],["L3 MultiMaximizer","Waves","マスタリング","VST3",""],["L3 UltraMaximizer","Waves","マスタリング","VST3",""],["L3-LL Multi","Waves","マスタリング","VST3",""],["L3-LL Ultra","Waves","マスタリング","VST3",""],["LinEQ","Waves","EQ","VST3","Broadband / Lowband"],["LinMB","Waves","コンプ・ダイナミクス","VST3","リニアフェイズ・マルチバンド"],["Lofi Space","Waves","リバーブ","VST3","ローファイなリバーブ＋ディレイ"],["MaxxBass","Waves","低音処理","VST3",""],["MaxxVolume","Waves","コンプ・ダイナミクス","VST3",""],["MetaFlanger","Waves","モジュレーション","VST3",""],["MondoMod","Waves","モジュレーション","VST3",""],["Morphoder","Waves","ボーカル処理","VST3","ボコーダー"],["MV2","Waves","コンプ・ダイナミクス","VST3",""],["NLS","Waves","歪み・サチュレーション","VST3","Buss / Channel"],["OneKnob Driver","Waves","歪み・サチュレーション","VST3",""],["OneKnob Filter","Waves","モジュレーション","VST3","フィルター"],["PAZ Analyzer","Waves","メーター・分析","VST3","Analyzer / Frequency / Meters / Position"],["PS22 StereoMaker","Waves","空間・ステレオ","VST3","Split / Spread / XSplit"],["PuigTec EQP1A","Waves","EQ","VST3",""],["PuigTec MEQ5","Waves","EQ","VST3",""],["Q-Clone","Waves","EQ","VST3","Q-Capture とセット"],["Q10","Waves","EQ","VST3","Q1〜Q10"],["RBass","Waves","低音処理","VST3",""],["RChannel","Waves","チャンネルストリップ","VST3",""],["RCompressor","Waves","コンプ・ダイナミクス","VST3",""],["RDeEsser","Waves","ボーカル処理","VST3",""],["Renaissance Axx","Waves","コンプ・ダイナミクス","VST3",""],["REQ","Waves","EQ","VST3","2 / 4 / 6 バンド"],["RVerb","Waves","リバーブ","VST3",""],["RVox","Waves","ボーカル処理","VST3",""],["S1 Stereo Imager","Waves","空間・ステレオ","VST3","Imager / MS Matrix / Shuffler"],["Scheps 73","Waves","EQ","VST3",""],["SoundShifter Pitch","Waves","ピッチ補正","VST3",""],["SuperTap","Waves","ディレイ","VST3","2-Taps / 6-Taps"],["TransX","Waves","コンプ・ダイナミクス","VST3","Multi / Wide"],["TrueVerb","Waves","リバーブ","VST3",""],["UltraPitch","Waves","ピッチ補正","VST3","3 Voices / 6 Voices / Shift"],["VComp","Waves","コンプ・ダイナミクス","VST3",""],["VEQ3","Waves","EQ","VST3",""],["VEQ4","Waves","EQ","VST3",""],["Vitamin","Waves","コンプ・ダイナミクス","VST3","マルチバンド・エンハンサー"],["Vocal Rider","Waves","ボーカル処理","VST3","Live 版あり"],["Waves Tune LT","Waves","ピッチ補正","VST3",""],["WLM Plus","Waves","メーター・分析","VST3","ラウドネスメーター（WLM Meter 含む）"],["X-Click","Waves","修復・ノイズ除去","VST3",""],["X-Crackle","Waves","修復・ノイズ除去","VST3",""],["X-Hum","Waves","修復・ノイズ除去","VST3",""],["X-Noise","Waves","修復・ノイズ除去","VST3",""],["Z-Noise","Waves","修復・ノイズ除去","VST3",""],["Open Compressor","Woodstock Audio","コンプ・ダイナミクス","VST3",""],["OTT","Xfer Records","コンプ・ダイナミクス","VST3","マルチバンド・コンプ"],["Serum 2 FX","Xfer Records","マルチエフェクト","VST3",""],["RC-20 Retro Color","XLN Audio","歪み・サチュレーション","VST3","ローファイ"],["RX 9 Spectral De-noise","iZotope","修復・ノイズ除去","VST3",""],["RX 9 Guitar De-noise","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-hum","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-click","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-clip","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-reverb","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-ess","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-crackle","iZotope","修復・ノイズ除去","VST3",""],["RX 9 Breath Control","iZotope","修復・ノイズ除去","VST3",""],["RX 9 Connect","iZotope","修復・ノイズ除去","VST3",""],["RX 9 Monitor","iZotope","修復・ノイズ除去","VST3",""],["RX 9 Mouth De-click","iZotope","修復・ノイズ除去","VST3",""],["RX 9 De-plosive","iZotope","修復・ノイズ除去","VST3",""],["Al Schmitt","Leapwing Audio","シグネチャー系","VST3",""],["DynOne3","Leapwing Audio","コンプ・ダイナミクス","VST3","マルチバンド"],["RootOne","Leapwing Audio","低音処理","VST3",""],["Neutron 4 Visual Mixer","iZotope","ユーティリティ","VST3","Relay か Neutron 4 を挿したトラックの音量・パン・幅を1画面で配置"],["Compressor","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","色付けのない軽い標準コンプ"],["Gate","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","軽い標準ゲート"],["Brickwall Limiter","Steinberg","マスタリング","VST3（Cubase 付属）","トラック用の軽い安全リミッター"],["Limiter","Steinberg","マスタリング","VST3（Cubase 付属）","軽さ重視で残したリミッター"],["DeEsser（Cubase）","Steinberg","ボーカル処理","VST3（Cubase 付属）","軽く挿せるディエッサー"],["Pitch Correct","Steinberg","ピッチ補正","VST3（Cubase 付属）","軽いリアルタイムのピッチ補正"],["Frequency","Steinberg","EQ","VST3（Cubase 付属）","バンドごとにサイドチェインを組める軽いダイナミックEQ"],["DJ-Eq","Steinberg","EQ","VST3（Cubase 付属）","オートメーションを手で動かす用"],["Chorus","Steinberg","モジュレーション","VST3（Cubase 付属）","音を確認中。Choral と聴き比べ"],["Phaser","Steinberg","モジュレーション","VST3（Cubase 付属）","軽さで残したフェイザー"],["AutoPan","Steinberg","モジュレーション","VST3（Cubase 付属）","素直なオートパン"],["FX Modulator","Steinberg","モジュレーション","VST3（Cubase 付属）","描いた波形で音量・フィルター・パンを揺らす。ダッキングにも"],["AutoFilter","Steinberg","マルチエフェクト","VST3（Cubase 付属）","入力の強さで動くフィルター"],["MorphFilter","Steinberg","マルチエフェクト","VST3（Cubase 付属）","XYパッドで手で動かすフィルター"],["WahWah","Steinberg","マルチエフェクト","VST3（Cubase 付属）","軽さで残したワウ"],["Underwater","Steinberg","マルチエフェクト","VST3（Cubase 付属）","ノブ1つで「隣の部屋」の音"],["LoopMash FX","Steinberg","マルチエフェクト","VST3（Cubase 付属）","スタッター・スクラッチをリアルタイムで"],["Bitcrusher","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","ビットクラッシャーの代表"],["Octaver","Steinberg","ピッチ補正","VST3（Cubase 付属）","軽さで残したオクターバー"],["REVerence","Steinberg","リバーブ","VST3（Cubase 付属）","実在の空間を再現するコンボリューション"],["Shimmer","Steinberg","リバーブ","VST3（Cubase 付属）","残響が上に伸びるシマー専用"],["MultiTap Delay","Steinberg","ディレイ","VST3（Cubase 付属）","多タップディレイの代表"],["PingPongDelay","Steinberg","ディレイ","VST3（Cubase 付属）","軽い左右ディレイ"],["SuperVision","Steinberg","メーター・分析","VST3（Cubase 付属）","メーター・位相・スペクトラムの総合表示"],["Volume","Steinberg","ユーティリティ","VST3（Cubase 付属）","音量だけを動かすオートメーション用"],["VST Bass Amp","Steinberg","低音処理","VST3（Cubase 付属）","ベースのライン録り・ベース音源用アンプ"],["Valhalla VintageVerb","Valhalla DSP","リバーブ","VST3","定番の軽いリバーブ。買い足し候補の筆頭","want"],["Pro-Q 4","FabFilter","EQ","VST3","Pro-Q 3 からの買い替え候補。セール待ち","want"],["RX 11","iZotope","修復・ノイズ除去","VST3","RX 9 からの買い替え候補。セール待ち","want"],["AmbiConverter","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 立体音響用"],["AmbiDecoder","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 立体音響用"],["AmpSimulator","Steinberg","ギター・アンプ","VST3（Cubase 付属）","非表示: Axe-Fx III があるため"],["Black Valve","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: UADx LA-2A と Supercharger GT が上"],["Chopper","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: FX Modulator が上位互換"],["Cloner","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: Doubler4 が上"],["DaTube","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: Kelvin・Trash 2 が上"],["Distortion","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: Kelvin・Trash 2 が上"],["Distroyer","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: Kelvin・Trash 2 が上"],["DualFilter","Steinberg","マルチエフェクト","VST3（Cubase 付属）","非表示: MorphFilter と DJ-Eq で足りる"],["EnvelopeShaper","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: Transient Master が上"],["EQ-M5","Steinberg","EQ","VST3（Cubase 付属）","非表示: UADx Pultec MEQ-5 が上"],["EQ-P1A","Steinberg","EQ","VST3（Cubase 付属）","非表示: UADx Pultec EQP-1A が上"],["Expander","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: Neutron 4 の Gate で足りる"],["Flanger","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: NI Flair が上"],["GEQ-10","Steinberg","EQ","VST3（Cubase 付属）","非表示: Pro-Q 3 が上"],["GEQ-30","Steinberg","EQ","VST3（Cubase 付属）","非表示: Pro-Q 3 が上"],["Grungelizer","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: RC-20・SuperVHS が上"],["Imager","Steinberg","空間・ステレオ","VST3（Cubase 付属）","非表示: Ozone 11 の Imager と S1 を使う"],["Lin Dither","Steinberg","マスタリング","VST3（Cubase 付属）","非表示: ディザーは Ozone 11 で"],["Magneto II","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: Studer A800・TAIP が上"],["Maximizer","Steinberg","マスタリング","VST3（Cubase 付属）","非表示: Ozone 11 が上"],["Metalizer","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: 出番が少ない"],["MidiGate","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: FX Modulator で同じことができる"],["Mix6To2","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: サラウンド用"],["Mix8To2","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: サラウンド用"],["MixConvert V6","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: サラウンド用。Cubase が裏で読み込むので非表示にできない"],["MixerDelay","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: サラウンド用"],["ModMachine","Steinberg","ディレイ","VST3（Cubase 付属）","非表示: Replika XT が上"],["MonoDelay","Steinberg","ディレイ","VST3（Cubase 付属）","非表示: Replika XT が上"],["MonoToStereo","Steinberg","空間・ステレオ","VST3（Cubase 付属）","非表示: StageOne2 の Mono Spread が上"],["Morphing Ch Strip [m]","Steinberg","チャンネルストリップ","VST3（Cubase 付属）","非表示: Neutron 4 が上"],["Morphing Ch Strip [s]","Steinberg","チャンネルストリップ","VST3（Cubase 付属）","非表示: Neutron 4 が上"],["MultibandCompressor","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: DynOne3 が上"],["MultibandEnvelopeShaper","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: Neutron 4 の Transient Shaper が上"],["MultibandExpander","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: 出番が少ない"],["Quadrafuzz v2","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: Trash 2 が上"],["Raiser","Steinberg","マスタリング","VST3（Cubase 付属）","非表示: Brickwall Limiter と Ozone 11 で足りる"],["Renderer for Dolby Atmos","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: Atmos 用"],["REV-X Hall","Steinberg","リバーブ","VST3（Cubase 付属）","非表示: Neoverb・UADx 各種が上"],["REV-X Plate","Steinberg","リバーブ","VST3（Cubase 付属）","非表示: UADx Pure Plate が上"],["REV-X Room","Steinberg","リバーブ","VST3（Cubase 付属）","非表示: Neoverb が上"],["REVelation","Steinberg","リバーブ","VST3（Cubase 付属）","非表示: Neoverb・RC 48 が上"],["RingModulator","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: NI Freak が上"],["RoomWorks","Steinberg","リバーブ","VST3（Cubase 付属）","非表示: Neoverb が上"],["RoomWorks SE","Steinberg","リバーブ","VST3（Cubase 付属）","非表示: Neoverb が上。軽い仮ミックス用に戻すのはアリ"],["Rotary","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: UADx Waterfall Rotary が上"],["SMPTEGenerator","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 映像同期用"],["SoftClipper","Steinberg","歪み・サチュレーション","VST3（Cubase 付属）","非表示: FIRETHECLIP・Open Compressor のクリッパーが上"],["Squasher","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: OTT を残した"],["StepFilter","Steinberg","マルチエフェクト","VST3（Cubase 付属）","非表示: FX Modulator が上"],["StereoDelay","Steinberg","ディレイ","VST3（Cubase 付属）","非表示: Replika XT が上"],["StereoEnhancer","Steinberg","空間・ステレオ","VST3（Cubase 付属）","非表示: StageOne2 が上"],["StudioChorus","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: Choral と Chorus で足りる"],["StudioDelay","Steinberg","ディレイ","VST3（Cubase 付属）","非表示: Replika XT が上"],["StudioEQ","Steinberg","EQ","VST3（Cubase 付属）","非表示: Pro-Q 3 が上。軽い補正用に戻すのはアリ"],["TestGenerator","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: テスト信号用"],["ToneBooster","Steinberg","EQ","VST3（Cubase 付属）","非表示: Pro-Q 3 で足りる"],["Tranceformer","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: NI Freak が上"],["Tremolo","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: FX Modulator が上"],["Tube Compressor","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: UADx LA-2A が上。軽さ目当てで戻すのはアリ"],["Tuner","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: Axe-Fx III のチューナーで足りる"],["Vibrato","Steinberg","モジュレーション","VST3（Cubase 付属）","非表示: MondoMod・FX Modulator で足りる"],["VintageCompressor","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: UADx 1176 が上。軽さ目当てで戻すのはアリ"],["VocalChain","Steinberg","ボーカル処理","VST3（Cubase 付属）","非表示: Nectar 4 が上"],["Vocoder","Steinberg","ボーカル処理","VST3（Cubase 付属）","非表示: VocalSynth 2 が上"],["VoxComp","Steinberg","ボーカル処理","VST3（Cubase 付属）","非表示: UltraVox2・Nectar 4 が上"],["VST Amp Rack","Steinberg","ギター・アンプ","VST3（Cubase 付属）","非表示: Axe-Fx III があるため"],["VST Connect CUE Mix","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 遠隔録音用。非表示にできない"],["VST Connect Monitor","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 遠隔録音用。非表示にできない"],["VST Connect PRO","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 遠隔録音用"],["VST Connect SE","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: 遠隔録音用"],["VST MultiPanner","Steinberg","ユーティリティ","VST3（Cubase 付属）","非表示: サラウンド用"],["VSTDynamics","Steinberg","コンプ・ダイナミクス","VST3（Cubase 付属）","非表示: Neutron 4 が上"],["GA Classics - CLEAN","Steinberg","ギター・アンプ","VST3（Cubase 付属）","非表示: Axe-Fx III があるため"],["GA Classics - CRUNCH","Steinberg","ギター・アンプ","VST3（Cubase 付属）","非表示: Axe-Fx III があるため"],["GA Classics - DRIVE","Steinberg","ギター・アンプ","VST3（Cubase 付属）","非表示: Axe-Fx III があるため"],["GA Classics - LEAD","Steinberg","ギター・アンプ","VST3（Cubase 付属）","非表示: Axe-Fx III があるため"]],"inst":[["Absynth 5","Native Instruments","シンセ","VST2","Stereo 版あり"],["Battery 4","Native Instruments","ドラム・パーカッション","VST3",""],["FM8","Native Instruments","シンセ","VST3","FMシンセ"],["Komplete Kontrol","Native Instruments","サンプラー・総合","VST3","NKS音源のブラウザ・ホスト"],["Kontakt","Native Instruments","サンプラー・総合","VST3",""],["Kontakt 7","Native Instruments","サンプラー・総合","VST3",""],["Kontakt 8","Native Instruments","サンプラー・総合","VST3",""],["Maschine 2","Native Instruments","サンプラー・総合","VST3","ビート制作・サンプラー"],["Massive","Native Instruments","シンセ","VST3",""],["Massive X","Native Instruments","シンセ","VST3",""],["Reaktor 6","Native Instruments","シンセ","VST3","モジュラー環境"],["Super 8","Native Instruments","シンセ","VST3",""],["Addictive Drums 2","XLN Audio","ドラム・パーカッション","VST3",""],["Ample Guitar L","Ample Sound","ギター","VST3","レスポール系エレキ"],["Ample Guitar M","Ample Sound","ギター","VST3","マーティン系アコギ"],["Ample Guitar SJ","Ample Sound","ギター","VST3","ギブソンSJ系アコギ"],["Ample Guitar T","Ample Sound","ギター","VST3","テレキャス系エレキ"],["Ample Guitar Twelve","Ample Sound","ギター","VST3","12弦アコギ"],["BA-1","BABY Audio","シンセ","VST3","80年代ポリシンセ風"],["Tekno","BABY Audio","ドラム・パーカッション","VST3","ドラムマシン"],["Babylon","W.A.Production","シンセ","VST3",""],["Backbone","Steinberg","ドラム・パーカッション","VST3","ドラムサンプラー"],["Groove Agent","Steinberg","ドラム・パーカッション","VST3",""],["Groove Agent SE","Steinberg","ドラム・パーカッション","VST3",""],["HALion 7","Steinberg","サンプラー・総合","VST3",""],["HALion Sonic","Steinberg","サンプラー・総合","VST3",""],["Padshop","Steinberg","シンセ","VST3","グラニュラー"],["Retrologue","Steinberg","シンセ","VST3","アナログ系"],["The Grand 3","Steinberg","ピアノ・鍵盤","VST3",""],["BFD3","BFD Drums","ドラム・パーカッション","VST3",""],["BM-KANDY","UJAM","ドラム・パーカッション","VST3","Beatmaker"],["USYNTH","UJAM","シンセ","VST3",""],["CS-80 V4","Arturia","シンセ","VST3",""],["DrumSynth","AIR Music Technology","ドラム・パーカッション","VST3",""],["EZbass","Toontrack","ベース","VST3",""],["Superior Drummer 3","Toontrack","ドラム・パーカッション","VST3",""],["BreakTweaker","iZotope","ドラム・パーカッション","VST3","ビート・グリッチ"],["Iris 2","iZotope","シンセ","VST3","サンプルベースのシンセ"],["MODO BASS","IK Multimedia","ベース","VST3",""],["MODO BASS 2","IK Multimedia","ベース","VST3",""],["MODO DRUM","IK Multimedia","ドラム・パーカッション","VST3",""],["SampleTank 4","IK Multimedia","サンプラー・総合","VST3",""],["Mutant VSTi","Crypton","その他","VST2",""],["Piapro Studio VSTi","Crypton","ボーカル","VST2","初音ミクなどのエディタ"],["Nexus","reFX","シンセ","VST3","ROMプラー"],["Rumble","UVI","シンセ","VST3",""],["Serum 2","Xfer Records","シンセ","VST3","ウェーブテーブル"],["Soraboy","shadowsora","シンセ","VST3","チップチューン"],["Spire 1.5","Reveal Sound","シンセ","VST2",""],["SubLab","FutureAudioWorkshop","ベース","VST3","808・サブベース"],["Synthesizer V Studio 2","Dreamtonics Co., Ltd.","ボーカル","VST3 / ARA","歌声合成"],["Trilian","Spectrasonics","ベース","VST3",""],["UADx Moog Minimoog Synth","Universal Audio (UADx)","シンセ","VST3",""],["UADx PolyMAX Synth","Universal Audio (UADx)","シンセ","VST3",""],["UADx Waterfall B3 Organ","Universal Audio (UADx)","ピアノ・鍵盤","VST3","オルガン"],["VOCALOID VSTi","Yamaha","ボーカル","VST3",""],["VOCALOID Inst","Yamaha","ボーカル","VST3",""],["VOCALOID4 Inst","Yamaha","ボーカル","VST3",""],["VX-β","Yamaha","ボーカル","VST3",""],["VPS Avenger","Vengeance","シンセ","VST3",""],["Noire","Native Instruments","ピアノ・鍵盤","Kontakt 8","柔らかい今っぽいピアノ。重め。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["The Grandeur","Native Instruments","ピアノ・鍵盤","Kontakt 8","明るく抜ける王道ピアノ。迷ったらこれ。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Alicia's Keys","Native Instruments","ピアノ・鍵盤","Kontakt 8","素直なポップス向けピアノ。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Scarbee Mark I","Native Instruments","ピアノ・鍵盤","Kontakt 8","ローズ系エレピの定番。軽い。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Session Strings Pro 2","Native Instruments","ストリングス・オーケストラ","Kontakt 8","ポップス用の弦。和音を自動でパート分け。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Action Strings 2","Native Instruments","ストリングス・オーケストラ","Kontakt 8","刻みフレーズが鍵盤1本で鳴る。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Session Horns Pro","Native Instruments","その他","Kontakt 8","ブラスのキメ。コードを押さえるとフレーズになる。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Session Guitarist Strummed Acoustic","Native Instruments","ギター","Kontakt 8","コードを押さえるだけでアコギのストローク。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Play Series","Native Instruments","シンセ","Kontakt 8","選ぶだけで使える軽い音色集。アイデア出しに。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Monark","Native Instruments","シンセ","Reaktor 6","Minimoog 系の太いベース。Reaktor 6 で開く。激軽。Komplete 14 Collector's Edition 収録・インストールは Native Access で要確認。Kontakt 8 で開く"],["Komplete 26 Collector's Edition アップデート","Native Instruments","サンプラー・総合","—","14 CE からのアップデート。セール待ち（BF 前後が狙い目）","want"],["Instrument X","Dreamtonics","その他","—","セール待ち。定価では買わない","want"]],"fxFolders":["EQ","コンプ・ダイナミクス","リバーブ","ディレイ","歪み・サチュレーション","モジュレーション","ボーカル処理","マスタリング","ユーティリティ","チャンネルストリップ","空間・ステレオ","低音処理","ギター・アンプ","ピッチ補正","修復・ノイズ除去","メーター・分析","シグネチャー系","マルチエフェクト"],"instFolders":["ボーカル","ギター","ベース","ドラム・パーカッション","シンセ","ピアノ・鍵盤","ストリングス・オーケストラ","サンプラー・総合","その他"]};
+const TIDY_VER = 5;
+const TIDY = {"fx":{"rank":{"firetheclip":"m","comeback kid":"m","crystalline":"m","ihny-2":"m","parallel aggressor":"m","smooth operator":"m","spaced out":"m","super vhs":"m","taip":"m","transit":"m","pro-q 3":"m","nectar 4":"m","neoverb":"m","neutron 4":"m","ozone 11":"m","rx 9 voice de-noise":"h","vocalsynth 2":"m","trash 2":"m","relay":"m","tonal balance control 2":"m","centerone3":"m","stageone2":"m","ultravox2":"m","gainmatch":"m","bite":"h","choral":"m","dirt":"h","driver":"h","enhanced eq":"h","flair":"m","fm8 fx":"h","freak":"m","passive eq":"m","phasis":"m","raum":"m","rc 24":"h","rc 48":"h","reaktor 6 fx":"h","replika xt":"m","solid bus comp":"m","solid dynamics":"h","solid eq":"m","supercharger":"h","supercharger gt":"m","transient master":"m","vari comp":"m","vc 160":"m","vc 2a":"h","vc 76":"h","absynth 5 fx":"h","maschine 2 fx":"h","rime":"m","soothe2":"m","dirty tape":"m","basslane pro":"m","kelvin":"m","unisum":"m","uadx 1176 rev a compressor":"m","uadx 1176ae compressor":"m","uadx 1176ln rev e compressor":"m","uadx api 2500 bus compressor":"m","uadx api vision channel strip":"m","uadx brigade chorus":"m","uadx century tube channel strip":"m","uadx galaxy tape echo":"m","uadx hitsville eq":"m","uadx hitsville eq mastering":"h","uadx hitsville reverb chambers":"m","uadx la-2 compressor":"m","uadx la-2a gray compressor":"m","uadx la-2a silver compressor":"m","uadx la-2a tube compressor":"m","uadx lexicon 224 digital reverb":"m","uadx oxide tape recorder":"h","uadx pultec eqp-1a eq":"m","uadx pultec hlf-3c eq":"h","uadx pultec meq-5 eq":"m","uadx pure plate reverb":"m","uadx studer a800 tape recorder":"m","uadx studio d chorus":"m","uadx waterfall rotary speaker":"m","curveeq":"h","audiotrack":"h","c1":"h","c4":"h","center":"h","cla bass":"h","cla drums":"m","cla echosphere":"h","cla effects":"h","cla guitars":"h","cla unplugged":"h","cla vocals":"m","deesser":"h","doppler":"h","doubler2":"h","doubler4":"m","emo-f2":"h","emo-generator":"h","emo-q4":"h","enigma":"m","gtr amp":"h","gtr stomp":"h","gtr tool rack":"h","gtr tuner":"h","gw mixcentric":"h","gw pianocentric":"h","gw tonecentric":"h","gw voicecentric":"h","h-comp":"h","h-delay":"h","ir-l":"h","j37":"m","jjp-bass":"m","jjp-cymbals & percussion":"m","jjp-drums":"m","jjp-guitars":"m","jjp-strings & keys":"m","jjp-vocals":"m","l1 limiter":"h","l1+ ultramaximizer":"h","l2":"h","l3 multimaximizer":"h","l3 ultramaximizer":"h","l3-ll multi":"h","l3-ll ultra":"h","lineq":"h","linmb":"h","lofi space":"m","maxxbass":"h","maxxvolume":"h","metaflanger":"h","mondomod":"m","morphoder":"h","mv2":"m","nls":"m","oneknob driver":"h","oneknob filter":"h","paz analyzer":"h","ps22 stereomaker":"h","puigtec eqp1a":"h","puigtec meq5":"h","q-clone":"h","q10":"h","rbass":"h","rchannel":"h","rcompressor":"h","rdeesser":"h","renaissance axx":"h","req":"h","rverb":"h","rvox":"h","s1 stereo imager":"m","scheps 73":"m","soundshifter pitch":"h","supertap":"h","transx":"h","trueverb":"h","ultrapitch":"h","vcomp":"m","veq3":"h","veq4":"h","vitamin":"h","vocal rider":"m","waves tune lt":"h","wlm plus":"h","x-click":"h","x-crackle":"h","x-hum":"h","x-noise":"h","z-noise":"h","open compressor":"m","ott":"m","serum 2 fx":"m","rc-20 retro color":"m","rx 9 spectral de-noise":"m","rx 9 guitar de-noise":"m","rx 9 de-hum":"m","rx 9 de-click":"m","rx 9 de-clip":"m","rx 9 de-reverb":"m","rx 9 de-ess":"h","rx 9 de-crackle":"h","rx 9 breath control":"h","rx 9 connect":"h","rx 9 monitor":"h","rx 9 mouth de-click":"h","rx 9 de-plosive":"h","al schmitt":"m","dynone3":"m","rootone":"m","neutron 4 visual mixer":"m","compressor":"m","gate":"m","brickwall limiter":"m","limiter":"m","deesser（cubase）":"m","pitch correct":"m","frequency":"m","dj-eq":"m","chorus":"m","phaser":"m","autopan":"m","fx modulator":"m","autofilter":"m","morphfilter":"m","wahwah":"m","underwater":"m","loopmash fx":"m","bitcrusher":"m","octaver":"m","reverence":"m","shimmer":"m","multitap delay":"m","pingpongdelay":"m","supervision":"m","volume":"m","vst bass amp":"m","ambiconverter":"h","ambidecoder":"h","ampsimulator":"h","black valve":"h","chopper":"h","cloner":"h","datube":"h","distortion":"h","distroyer":"h","dualfilter":"h","envelopeshaper":"h","eq-m5":"h","eq-p1a":"h","expander":"h","flanger":"h","geq-10":"h","geq-30":"h","grungelizer":"h","imager":"h","lin dither":"h","magneto ii":"h","maximizer":"h","metalizer":"h","midigate":"h","mix6to2":"h","mix8to2":"h","mixconvert v6":"h","mixerdelay":"h","modmachine":"h","monodelay":"h","monotostereo":"h","morphing ch strip [m]":"h","morphing ch strip [s]":"h","multibandcompressor":"h","multibandenvelopeshaper":"h","multibandexpander":"h","quadrafuzz v2":"h","raiser":"h","renderer for dolby atmos":"h","rev-x hall":"h","rev-x plate":"h","rev-x room":"h","revelation":"h","ringmodulator":"h","roomworks":"h","roomworks se":"h","rotary":"h","smptegenerator":"h","softclipper":"h","squasher":"h","stepfilter":"h","stereodelay":"h","stereoenhancer":"h","studiochorus":"h","studiodelay":"h","studioeq":"h","testgenerator":"h","tonebooster":"h","tranceformer":"h","tremolo":"h","tube compressor":"h","tuner":"h","vibrato":"h","vintagecompressor":"h","vocalchain":"h","vocoder":"h","voxcomp":"h","vst amp rack":"h","vst connect cue mix":"h","vst connect monitor":"h","vst connect pro":"h","vst connect se":"h","vst multipanner":"h","vstdynamics":"h","ga classics - clean":"h","ga classics - crunch":"h","ga classics - drive":"h","ga classics - lead":"h"},"gone":["amt amp leveling","amt max warm","amt multi-max","blueverb drv-2080","british mcl-2269","british neq-1972","bt analog chorus ch2s-3","bt analog phaser aph2s-3","bt analog trackbox","bt brickwall bw2s-3","bt compressor cp2s-3","bt compressor fa770-3","bt deesser ds2s-3","bt equalizer bq2s-3","bt equalizer bx2s-3","bt equalizer geq12-3","bt equalizer peq2b-3","bt equalizer peq322-3","bt equalizer peq5b-3","bt expandergate gx622-3","bt limiter lm2s-3","bt oilcan echo tle2s-3","bt stereo imager st2s-3","bt tempo delay dl3d-3","bt valvedriver adr2s-3","cosmos","e-3b compressor","e-3b maximizer","e-channel","e-compressor","e-gate expander","e-graphic eq","e-maximizer","e-retrovox","e-tubetape warmer","echoes","eq 9063b alltech","liquid compressor ii","liquid delays ii","liquid gate ii","liquid mod ii","liquid phase ii","liquidverb ii","lm amplifier lm-662","magnetic","magnetic ii","program eqp-4","pulsetec eqs","retro film-tone","retro music-tone","rock amp legends","studio channel sc-226","guitar rig 5","guitar rig 6","guitar rig 7","neutron","neutron 3 visual mixer","reaktor 5 fx","ozone imager","centerone","stageone","ultravox","trash","vinyl","nectar 3","rx 8 breath control"]},"inst":{"rank":{"absynth 5":"m","battery 4":"m","fm8":"m","komplete kontrol":"m","kontakt":"h","kontakt 7":"h","kontakt 8":"m","maschine 2":"m","massive":"m","massive x":"m","reaktor 6":"m","super 8":"m","addictive drums 2":"m","ample guitar l":"m","ample guitar m":"m","ample guitar sj":"m","ample guitar t":"m","ample guitar twelve":"m","ba-1":"m","tekno":"m","babylon":"m","backbone":"m","groove agent":"m","groove agent se":"h","halion 7":"m","halion sonic":"h","padshop":"m","retrologue":"m","the grand 3":"m","bfd3":"m","bm-kandy":"m","usynth":"m","cs-80 v4":"m","drumsynth":"m","ezbass":"m","superior drummer 3":"m","breaktweaker":"m","iris 2":"m","modo bass":"h","modo bass 2":"m","modo drum":"m","sampletank 4":"m","mutant vsti":"m","piapro studio vsti":"m","nexus":"m","rumble":"m","serum 2":"m","soraboy":"m","spire 1.5":"m","sublab":"m","synthesizer v studio 2":"m","trilian":"m","uadx moog minimoog synth":"m","uadx polymax synth":"m","uadx waterfall b3 organ":"m","vocaloid vsti":"m","vocaloid inst":"h","vocaloid4 inst":"h","vx-β":"m","vps avenger":"m","noire":"m","the grandeur":"m","alicia's keys":"m","scarbee mark i":"m","session strings pro 2":"m","action strings 2":"m","session horns pro":"m","session guitarist strummed acoustic":"m","play series":"m","monark":"m"},"gone":["reaktor 5"]}};
+const TIDY_MEMO = {"open compressor":"普段使いのコンプ。波形で潰れ方が見える。クリッパー・サチュレーター内蔵","unisum":"マスター・バスの接着剤。浅く1〜2dB","dynone3":"帯域別コンプの主力。マスター・バス向け","rootone":"低域の倍音・サブ生成の主力","basslane pro":"低域をセンターにまとめる","soothe2":"耳に痛い帯域を自動で抑える。重め","kelvin":"サチュレーションの主力。重め","pro-q 3":"EQ の主力。リニアフェイズ時は遅延大","ozone 11":"仕上げ用。Imager モジュールでボーカル高域を広げる用途にも","nectar 4":"ボーカル処理の主力。ボーカルバスに1個","neutron 4":"コンプ以外の便利機能セット（Exciter・Transient・Unmask）","relay":"軽い。Unmask や Visual Mixer の名札用","neutron 4 visual mixer":"Relay を挿したトラックの音量・パン・幅を配置","s1 stereo imager":"ボーカルの広がりを整える用（Ozone Imager の後に）","nls":"卓のサミング再現。各トラックに Channel、バスに Buss","mv2":"小さい音を持ち上げて音量をそろえる時短用","ott":"3バンドで派手に持ち上げる音作り用","firetheclip":"クリッパー。VST2 のみ。Aquarius で更新確認","gainmatch":"前後に挟んで音量をそろえて聴き比べる","replika xt":"ディレイの主力","neoverb":"リバーブの主力。重め","uadx api 2500 bus compressor":"パンチのあるバスコンプ。ドラムバスに","solid bus comp":"SSL 系バスコンプ。締まってまとまる","uadx la-2a silver compressor":"迷ったらこれ。万能で反応が速め","uadx 1176ln rev e compressor":"定番の後期型。ボーカル向き","vc 160":"dbx 160 系。ドラム・ベースが締まる","scheps 73":"Neve 系の色付けEQ","vcomp":"Neve 2254 系コンプ。バスに太さ"};
+const RANK = { main:'一軍', hide:'隠す', gone:'削除済み' };
+const SHELF = { show:'表示中', hide:'隠す', gone:'削除済み' };
+const shelfOf = p => p.rank==='hide' ? 'hide' : p.rank==='gone' ? 'gone' : 'show';
+const tidyRank = (t,name) => { const d=TIDY[t]; if(!d) return ''; const k=name.toLowerCase(); return d.gone.includes(k)?'gone':({m:'main',h:'hide'}[d.rank[k]]||''); };
+const presetMissing = () => { const have=new Set(S.products.map(p=>p.type+'|'+p.name.toLowerCase())); return {fx:PRESET.fx.filter(r=>!have.has('fx|'+r[0].toLowerCase())).length, inst:PRESET.inst.filter(r=>!have.has('inst|'+r[0].toLowerCase())).length}; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => { const d=new Date(); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
+const TYPE = { inst:'音源', fx:'プラグイン' };
+const STATUS = { own:'所持', want:'欲しい', trial:'体験版' };
+
+function defaults(){
+  const mk = (names) => names.map((n,i) => ({ id: uid(), name: n, color: COLORS[i % COLORS.length] }));
+  return {
+    v:1,
+    folders:{
+      inst: mk(['ボーカル','ギター','ベース','ドラム・パーカッション','シンセ','ピアノ・鍵盤','ストリングス・オーケストラ','その他']),
+      fx:   mk(['EQ','コンプ・ダイナミクス','リバーブ','ディレイ','歪み・サチュレーション','モジュレーション','ボーカル処理','マスタリング','ユーティリティ'])
+    },
+    products:[]
+  };
+}
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) || defaults(); } catch(e){ S = defaults(); }
+const THEMES = [
+  ['neon','ソーダ','#0d0f1f','#ff4fd8','#5ef2e0'],
+  ['pink','ピンク','#170a1f','#ff5fc8','#8a5cff'],
+  ['blue','ブルー','#060d1f','#2b6bff','#00d5ff'],
+  ['grape','グレープ','#120b26','#7c4dff','#c6ff5e'],
+  ['sunset','サンセット','#1a0c16','#ff4f7b','#ff9d4f'],
+  ['hacker','ハッカー','#040e0c','#00c27a','#4dffa6'],
+  ['berry','ストロベリー','#1c0a10','#ff3d6e','#ffa3c2'],
+  ['milk','ミルク','#f3f0fb','#ff8fd8','#8fb8ff'],
+];
+function applySkin(){
+  const k = S.skin || 'neon';
+  if(k==='neon') delete document.documentElement.dataset.skin; else document.documentElement.dataset.skin = k;
+  document.documentElement.classList.toggle('noanim', S.anim === false);
+  const t = THEMES.find(x=>x[0]===k); const m=document.querySelector('meta[name="theme-color"]'); if(t&&m) m.content=t[2];
+}
+(function sparks(){ const box=document.getElementById('bgfx'); const ch=['✦','✧','♡','✦','⋆'];
+  for(let i=0;i<16;i++){ const e=document.createElement('span'); e.className='spark'; e.textContent=ch[i%ch.length];
+    e.style.left=(Math.random()*96+2)+'%'; e.style.top=(Math.random()*90+3)+'%';
+    e.style.fontSize=(9+Math.random()*10)+'px'; e.style.animationDelay=(Math.random()*4).toFixed(2)+'s'; e.style.animationDuration=(3+Math.random()*3).toFixed(2)+'s';
+    box.appendChild(e);} })();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){ toast('保存できませんでした'); } };
+
+// view state
+let V = { shelf:'show', tab:'inst', folder:null, product:null, q:'', ideaFilter:'open', statusFilter:'all' };
+
+const $app = document.getElementById('app');
+const $layer = document.getElementById('layer');
+const $fab = document.getElementById('fab');
+
+function folderOf(p){ return (S.folders[p.type]||[]).find(f => f.id === p.folderId); }
+function colorOf(p){ return p.color || folderOf(p)?.color || '#7f8aa8'; }
+function initial(name){ const t=(name||'?').trim(); return esc(t.slice(0, /^[A-Za-z0-9]/.test(t)?2:1).toUpperCase()); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,1600); }
+
+function itemHTML(p, showFolder, grip){
+  const f = folderOf(p); const n = p.ideas.length; const open = p.ideas.filter(i=>!i.done).length;
+  const sub = [p.maker, showFolder && f ? f.name : '', p.format].filter(Boolean).join(' ・ ');
+  return `<button class="item ${p.rank&&p.rank!=='main'?'r-'+p.rank:''}" data-p="${p.id}">${grip?'<span class="grip" aria-label="ドラッグで並べ替え">≡</span>':''}
+    <div class="mono" style="--c:${colorOf(p)}">${initial(p.name)}</div>
+    <div class="body"><div class="nm">${p.fav?'<span class="star">★</span> ':''}${esc(p.name)}</div><div class="sub">${esc(sub)||'&nbsp;'}</div></div>
+    <div class="meta">${p.rank==='hide'||p.rank==='gone'?`<span class="pill ${p.rank}">${RANK[p.rank]}</span>`:''}${p.status!=='own'?`<span class="pill ${p.status}">${STATUS[p.status]}</span>`:''}${n?`<span class="bulb">💡 ${open}/${n}</span>`:''}</div>
+  </button>`;
+}
+
+function matches(p, q){
+  if(!q) return true; q=q.toLowerCase();
+  return [p.name,p.maker,p.memo,p.format,...p.ideas.map(i=>i.text)].some(x => (x||'').toLowerCase().includes(q));
+}
+
+/* ---------- render ---------- */
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.go === V.tab));
+  $fab.hidden = !(V.tab==='inst'||V.tab==='fx') || !!V.product;
+  if(V.product) return renderProduct();
+  if(V.tab==='ideas') return renderIdeas();
+  if(V.tab==='settings') return renderSettings();
+  if(V.folder) return renderFolder();
+  renderHome();
+}
+
+function renderHome(){
+  const t = V.tab, folders = S.folders[t], all = S.products.filter(p=>p.type===t);
+  if(!SHELF[V.shelf]) V.shelf='show';
+  const sc = {show:0,hide:0,gone:0}; all.forEach(p=>sc[shelfOf(p)]++);
+  if(V.shelf==='gone' && !sc.gone) V.shelf='show';
+  const prods = all.filter(p=>shelfOf(p)===V.shelf), sh = V.shelf;
+  const total = prods.length;
+  const ideaN = prods.reduce((a,p)=>a+p.ideas.length,0);
+  const wantN = prods.filter(p=>p.status==='want').length;
+  let body;
+  if(V.q){
+    const hits = S.products.filter(p => matches(p,V.q));
+    body = `<div class="label">検索結果 ${hits.length}件</div>` + (hits.length ? `<div class="list">${hits.map(p=>itemHTML(p,true)).join('')}</div>` : `<div class="empty">見つかりませんでした</div>`);
+  } else {
+    const meter = total ? folders.filter(f=>prods.some(p=>p.folderId===f.id)).map(f=>{
+      const c = prods.filter(p=>p.folderId===f.id).length;
+      return `<i style="width:${c/total*100}%;background:${f.color}" title="${esc(f.name)}"></i>`;}).join('') : '';
+    const legend = folders.filter(f=>prods.some(p=>p.folderId===f.id)).map(f=>`<span><b style="background:${f.color}"></b>${esc(f.name)} ${prods.filter(p=>p.folderId===f.id).length}</span>`).join('');
+    body = `
+      <div class="stats">
+        <div class="stat"><div class="n">${total}</div><div class="t">${sh==='show'?'登録数':SHELF[sh]}</div></div>
+        <div class="stat"><div class="n" style="color:var(--idea)">${ideaN}</div><div class="t">アイデア</div></div>
+        <div class="stat"><div class="n">${wantN}</div><div class="t">欲しい</div></div>
+      </div>
+      ${sh!=='show' ? `<p class="note" style="margin:10px 2px 0">${sh==='hide'?'Cubase で非表示にしたもの。表示に戻すときは、製品の編集で「コレクション」を「一軍」か「未設定」にすると、表示中に移ります。':'アンインストールしたもの、またはスクショに写らなかったもの。持っていたら製品の編集で「コレクション」を変更してください。'}</p>`:''}
+      ${sh==='show' && S.products.length && S.tidySeen!==TIDY_VER ? `<button class="banner" id="tidy"><span style="font-size:26px">🧹</span><span><b>整理結果を反映する</b><small>一軍／隠す／削除済みの印をつけ、新しく見つかった製品を追加します（何も消えません）</small></span></button>`:''}
+      ${(()=>{const m=presetMissing()[t]; return sh==='show' && m && !(S.products.length && S.tidySeen!==TIDY_VER) && S.presetSeen!==PRESET.inst.length+PRESET.fx.length ? `<button class="banner" id="preset"><span style="font-size:26px">📥</span><span><b>持っている${TYPE[t]} ${m}件を取り込む</b><small>種類ごとのフォルダに振り分けて追加します（音源・プラグインまとめて）</small></span></button>`:'';})()}
+      <div class="label">構成</div>
+      <div class="meter">${meter}</div>
+      <div class="legend">${legend || '製品を追加すると、フォルダごとの割合がここに表示されます'}</div>
+      <div class="label">フォルダ ${sh==='show'?'<button id="editFolders">並べ替え・色・名前</button>':''}</div>
+      <div class="racks">
+        ${folders.filter(f=>sh==='show'||prods.some(p=>p.folderId===f.id)).map(f=>{const c=prods.filter(p=>p.folderId===f.id).length;
+          return `<button class="rack" style="--c:${f.color}" data-f="${f.id}">
+            <span class="screws"><i></i><i></i></span>
+            <span class="nm">${esc(f.name)}</span>
+            <span class="chips">${'<i></i>'.repeat(Math.min(c,10))}</span>
+            <span class="ct">${c}<small>製品</small></span></button>`;}).join('')}
+        ${sh==='show'?'<button class="rack add" id="addFolder">＋ フォルダ追加</button>':(prods.length?'':`<div class="empty"><b>${SHELF[sh]}の製品はありません</b></div>`)}
+      </div>`;
+  }
+  $app.innerHTML = `
+    <header class="top"><div class="brand"><span class="logo">RACK NOTE</span> <span class="tw">✦</span><small>音源・プラグイン管理</small></div></header>
+    <div class="seg"><button data-t="inst" class="${t==='inst'?'on':''}">🎹 音源</button><button data-t="fx" class="${t==='fx'?'on':''}">🎛️ プラグイン</button></div>
+    ${V.q?'':`<div class="seg shelf">${['show','hide','gone'].filter(k=>k!=='gone'||sc.gone).map(k=>`<button data-sh="${k}" class="${sh===k?'on':''}">${k==='show'?'表示中':k==='hide'?'🙈 隠す':'🗑 削除済み'} <small>${sc[k]}</small></button>`).join('')}</div>`}
+    <div class="search">🔍<input id="q" type="search" placeholder="製品名・メーカー・アイデアで検索" value="${esc(V.q)}"></div>
+    ${body}<div class="pad"></div>`;
+  $app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{V.tab=b.dataset.t;render();});
+  $app.querySelectorAll('[data-sh]').forEach(b=>b.onclick=()=>{V.shelf=b.dataset.sh;render();});
+  const q = document.getElementById('q');
+  q.oninput = () => { V.q=q.value; const pos=q.selectionStart; render(); const n=document.getElementById('q'); n.focus(); n.setSelectionRange(pos,pos); };
+  bindCommon();
+  const pr=document.getElementById('preset'); if(pr) pr.onclick=importPreset;
+  const td=document.getElementById('tidy'); if(td) td.onclick=applyTidy;
+  const ef=document.getElementById('editFolders'); if(ef) ef.onclick=()=>folderManager(t);
+  const af=document.getElementById('addFolder'); if(af) af.onclick=()=>folderForm(t);
+  $app.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{V.folder=b.dataset.f;V.statusFilter='all';render();window.scrollTo(0,0);});
+}
+
+function renderFolder(){
+  const f = S.folders[V.tab].find(x=>x.id===V.folder);
+  if(!f){ V.folder=null; return render(); }
+  let prods = S.products.filter(p=>p.type===V.tab && p.folderId===f.id && shelfOf(p)===V.shelf);
+  const counts = {all:prods.length, own:0, want:0, trial:0, fav:0, main:0, hide:0, gone:0};
+  prods.forEach(p=>{counts[p.status]++; if(p.fav) counts.fav++; if(p.rank) counts[p.rank]++;});
+  if(RANK[V.statusFilter]) V.statusFilter='all';
+  if(V.statusFilter==='fav') prods=prods.filter(p=>p.fav); else if(V.statusFilter!=='all') prods=prods.filter(p=>p.status===V.statusFilter);
+  const mode = S.sortMode || 'maker';
+  // 自分で並べる用の順番を整える（フォルダ内の全製品に連番）
+  const ordKey = p => p.order ?? p.created ?? 0;
+  S.products.filter(p=>p.type===V.tab && p.folderId===f.id).sort((a,b)=>ordKey(a)-ordKey(b)).forEach((p,i)=>p.order=i);
+  const byName=(a,b)=>a.name.localeCompare(b.name,'ja');
+  if(mode==='maker') prods.sort((a,b)=>(a.maker||'').localeCompare(b.maker||'','ja')||byName(a,b));
+  else if(mode==='name') prods.sort(byName);
+  else if(mode==='new') prods.sort((a,b)=>(b.created||0)-(a.created||0));
+  else prods.sort((a,b)=>a.order-b.order);
+  const favs = mode==='manual' ? [] : prods.filter(p=>p.fav);
+  let groups = ''; let cur = null;
+  if(mode==='manual') groups = `<p class="sortnote">左の ≡ をつかんで上下にドラッグすると並べ替えられます</p><div class="list" id="sortList">${prods.map(p=>itemHTML(p,false,true)).join('')}</div>`;
+  else if(mode!=='maker') groups = `<div class="list">${prods.map(p=>itemHTML(p,false)).join('')}</div>`;
+  else {
+    const by = new Map();
+    prods.forEach(p=>{ const m=p.maker||'メーカー未設定'; if(!by.has(m)) by.set(m,[]); by.get(m).push(p); });
+    V.open = V.open || {};
+    const single = by.size===1;
+    const allOpen = [...by.keys()].every(m=>single||V.open[f.id+'|'+m]);
+    groups = by.size>1 ? `<div class="mtools"><button id="mall">${allOpen?'すべて閉じる':'すべて開く'}</button></div>` : '';
+    groups += [...by.entries()].map(([m,list])=>{
+      const open = single || !!V.open[f.id+'|'+m];
+      const pips = list.slice(0,8).map(p=>`<i style="background:${colorOf(p)}"></i>`).join('');
+      return `<div class="mgroup ${open?'open':''}">
+        <button class="mhead" data-m="${esc(m)}" aria-expanded="${open}"><span class="mname">${esc(m)}</span><span class="pips">${pips}</span><span class="mct">${list.length}</span><span class="chev">›</span></button>
+        ${open?`<div class="list mlist">${list.map(p=>itemHTML(p,false)).join('')}</div>`:''}</div>`;
+    }).join('');
+  }
+  const sorts = [['maker','メーカー別'],['name','名前順'],['new','追加が新しい順'],['manual','自分で並べる']]
+    .map(([k,l])=>`<button class="chip ${mode===k?'on':''}" data-sort="${k}">${l}</button>`).join('');
+  const chips = [['all','すべて'],['own','所持'],['want','欲しい'],['trial','体験版'],['fav','★ お気に入り']]
+    .map(([k,l])=>`<button class="chip ${V.statusFilter===k?'on':''}" data-s="${k}">${l} ${counts[k]}</button>`).join('');
+  $app.innerHTML = `
+    <header class="top"><button class="iconbtn back" id="back" aria-label="戻る">‹</button>
+      <div class="brand" style="letter-spacing:.02em;font-family:var(--font-body)">${esc(f.name)}<small>${TYPE[V.tab]}フォルダ${V.shelf!=='show'?'・'+SHELF[V.shelf]:''}</small></div>
+      <button class="iconbtn" id="fedit" aria-label="フォルダを編集">✎</button></header>
+    <div style="height:4px;background:${f.color};margin:0 -16px;opacity:.8"></div>
+    <div class="label">絞り込み</div>
+    <div class="chiprow">${chips}</div>
+    <div class="label">並べ替え</div>
+    <div class="chiprow">${sorts}</div>
+    <div class="label">${prods.length}件</div>
+    ${favs.length&&V.statusFilter!=='fav'?`<div class="maker" style="color:var(--idea)">★ お気に入り<span>${favs.length}</span></div><div class="list">${favs.map(p=>itemHTML(p,false)).join('')}</div>`:''}
+    ${prods.length?groups:
+      `<div class="empty"><b>まだ製品がありません</b>右下の ＋ から、このフォルダに製品を追加できます</div>`}
+    <div class="pad"></div>`;
+  document.getElementById('back').onclick=()=>{V.folder=null;render();};
+  document.getElementById('fedit').onclick=()=>folderForm(V.tab,f);
+  $app.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{V.statusFilter=b.dataset.s;render();});
+  $app.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const k=f.id+'|'+b.dataset.m; V.open[k]=!V.open[k]; render();});
+  const mall=document.getElementById('mall');
+  if(mall) mall.onclick=()=>{ const ms=[...$app.querySelectorAll('[data-m]')].map(b=>f.id+'|'+b.dataset.m);
+    const to = !ms.every(k=>V.open[k]); ms.forEach(k=>V.open[k]=to); render(); };
+  $app.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{S.sortMode=b.dataset.sort;save();render();});
+  const sl=document.getElementById('sortList');
+  if(sl) makeSortable(sl,'.item',()=>{
+    const ids=[...sl.querySelectorAll('[data-p]')].map(x=>x.dataset.p);
+    const items=ids.map(id=>S.products.find(p=>p.id===id));
+    const slots=items.map(p=>p.order).sort((a,b)=>a-b);
+    items.forEach((p,i)=>p.order=slots[i]); save(); });
+  bindCommon();
+}
+
+function renderProduct(){
+  const p = S.products.find(x=>x.id===V.product);
+  if(!p){ V.product=null; return render(); }
+  const f = folderOf(p);
+  const ideas = [...p.ideas].sort((a,b)=>(a.done-b.done)||(b.ts-a.ts));
+  const rows = [['種類',TYPE[p.type]],['フォルダ',f?.name],['メーカー',p.maker],['形式',p.format],['状態',STATUS[p.status]],['コレクション',RANK[p.rank]],['購入日',p.date],['価格',p.price],['リンク',p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener" style="color:var(--accent)">${esc(p.url)}</a>`:'']]
+    .filter(r=>r[1]).map(([k,v])=>`<dt>${k}</dt><dd>${k==='リンク'?v:esc(v)}</dd>`).join('');
+  $app.innerHTML = `
+    <header class="top"><button class="iconbtn back" id="back" aria-label="戻る">‹</button>
+      <div class="brand" style="letter-spacing:.02em;font-family:var(--font-body);font-size:15px">${esc(p.name)}</div>
+      <button class="iconbtn" id="rk" aria-label="${shelfOf(p)==='show'?'隠すに移す':'表示中に戻す'}" title="${shelfOf(p)==='show'?'隠すに移す':'表示中に戻す'}">${shelfOf(p)==='show'?'🙈':'👁'}</button>
+      <button class="iconbtn" id="fav" aria-label="お気に入り" style="color:var(--idea)">${p.fav?'★':'☆'}</button>
+      <button class="iconbtn" id="pedit" aria-label="編集">✎</button></header>
+    <div class="hero"><div class="mono" style="--c:${colorOf(p)}">${initial(p.name)}</div>
+      <div style="min-width:0"><h1>${esc(p.name)}</h1><div class="sub">${esc([p.maker,f?.name].filter(Boolean).join(' ・ '))}</div></div></div>
+    <dl class="kv">${rows}</dl>
+    ${p.memo?`<div class="label">メモ</div><div class="memo">${esc(p.memo)}</div>`:''}
+    <div class="label">使い方のアイデア <span style="color:var(--idea)">${p.ideas.filter(i=>!i.done).length} / ${p.ideas.length}</span></div>
+    <div class="list">${ideas.length?ideas.map(i=>ideaHTML(i,p,false)).join(''):`<div class="empty"><b>アイデアはまだありません</b>「ボーカルの裏に薄く」「Aメロだけローファイに」など、思いついた使い道を書き留めましょう</div>`}</div>
+    <div class="ideaadd"><textarea id="newIdea" placeholder="アイデアを追加…"></textarea><button id="addIdea">追加</button></div>
+    <p class="note">丸をタップすると「試した」になります。</p>
+    <div class="pad"></div>`;
+  document.getElementById('back').onclick=()=>{V.product=null;render();};
+  document.getElementById('fav').onclick=()=>{p.fav=!p.fav;save();render();};
+  document.getElementById('rk').onclick=()=>{ const toShow=shelfOf(p)!=='show'; p.rank= toShow ? 'main' : 'hide'; V.shelf = toShow ? 'show' : 'hide'; save(); render(); toast(toShow?'表示中に戻しました':'隠すに移しました'); };
+  document.getElementById('pedit').onclick=()=>productForm(p);
+  document.getElementById('addIdea').onclick=()=>{
+    const ta=document.getElementById('newIdea'); const v=ta.value.trim(); if(!v) return ta.focus();
+    p.ideas.push({id:uid(),text:v,done:false,date:today(),ts:Date.now()}); save(); render(); toast('アイデアを追加しました');
+  };
+  bindIdeas();
+}
+
+function ideaHTML(i,p,showFrom){
+  return `<div class="idea ${i.done?'done':''}">
+    <button class="tick" data-tick="${p.id}|${i.id}" aria-label="試した">${i.done?'✓':''}</button>
+    <div class="tx">${showFrom?`<button class="from" data-p="${p.id}">${esc(p.name)} ›</button>`:''}${esc(i.text)}<span class="dt">${esc(i.date)}${i.done?' ・ 試した':''}</span></div>
+    <button class="x" data-ix="${p.id}|${i.id}" aria-label="編集">⋯</button></div>`;
+}
+function bindIdeas(){
+  $app.querySelectorAll('[data-tick]').forEach(b=>b.onclick=()=>{const [pid,iid]=b.dataset.tick.split('|');
+    const i=S.products.find(p=>p.id===pid).ideas.find(x=>x.id===iid); i.done=!i.done; save(); render();});
+  $app.querySelectorAll('[data-ix]').forEach(b=>b.onclick=()=>{const [pid,iid]=b.dataset.ix.split('|');ideaForm(pid,iid);});
+  $app.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>openProduct(b.dataset.p));
+}
+
+function renderIdeas(){
+  const all = [];
+  S.products.forEach(p=>p.ideas.forEach(i=>all.push({i,p})));
+  let list = all;
+  if(V.ideaFilter==='open') list=list.filter(x=>!x.i.done);
+  if(V.ideaFilter==='done') list=list.filter(x=>x.i.done);
+  if(V.q) list=list.filter(x=>(x.i.text+x.p.name).toLowerCase().includes(V.q.toLowerCase()));
+  list.sort((a,b)=>b.i.ts-a.i.ts);
+  $app.innerHTML = `
+    <header class="top"><div class="brand"><span class="logo">IDEAS</span> <span class="tw">✦</span><small>使い方アイデアの一覧</small></div></header>
+    <div class="search">🔍<input id="q" type="search" placeholder="アイデアを検索" value="${esc(V.q)}"></div>
+    <div class="label">表示</div>
+    <div class="chiprow">${[['open','まだ試してない'],['done','試した'],['all','すべて']].map(([k,l])=>`<button class="chip ${V.ideaFilter===k?'on':''}" data-if="${k}">${l}</button>`).join('')}</div>
+    <div class="label">${list.length}件</div>
+    <div class="list">${list.length?list.map(x=>ideaHTML(x.i,x.p,true)).join(''):`<div class="empty"><b>表示するアイデアがありません</b>製品の詳細画面から、使い方のアイデアを追加できます</div>`}</div>
+    <div class="pad"></div>`;
+  $app.querySelectorAll('[data-if]').forEach(b=>b.onclick=()=>{V.ideaFilter=b.dataset.if;render();});
+  const q=document.getElementById('q'); q.oninput=()=>{V.q=q.value;const pos=q.selectionStart;render();const n=document.getElementById('q');n.focus();n.setSelectionRange(pos,pos);};
+  bindIdeas();
+}
+
+function renderSettings(){
+  const n=S.products.length, ideas=S.products.reduce((a,p)=>a+p.ideas.length,0);
+  $app.innerHTML = `
+    <header class="top"><div class="brand"><span class="logo">SETTINGS</span> <span class="tw">✦</span><small>フォルダ管理とバックアップ</small></div></header>
+    <div class="label">カラーテーマ</div>
+    <div class="themes">${THEMES.map(([k,l,bg,a,b])=>`<button class="th ${(S.skin||'neon')===k?'on':''}" data-skin="${k}" style="--k:${bg};--a:${a};--b:${b}"><i class="pv"></i><span>${l}</span></button>`).join('')}</div>
+    <div class="label">背景</div>
+    <div class="switch"><span><b>背景アニメーション</b><br><span class="note">オフにすると電池の減りをおさえられます</span></span><button class="sw ${S.anim===false?'':'on'}" id="animsw" aria-label="背景アニメーション"></button></div>
+    <div class="label">フォルダ</div>
+    <div class="btnrow" style="margin-top:0"><button class="btn" id="fm1">🎹 音源フォルダを編集</button><button class="btn" id="fm2">🎛️ プラグインフォルダを編集</button></div>
+    <div class="label">バックアップ</div>
+    <p class="note" style="margin:0 2px 8px">データはこの端末のブラウザ内にだけ保存されています（製品 ${n}件・アイデア ${ideas}件）。機種変更やブラウザのデータ削除に備えて、ときどき書き出しておくと安心です。</p>
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn primary" id="exp">書き出し（JSON保存）</button>
+      <button class="btn" id="copy">JSONをコピー</button>
+    </div>
+    <div class="btnrow">
+      <label class="btn" style="text-align:center">ファイルから読み込み<input type="file" id="impf" accept=".json,application/json" hidden></label>
+      <button class="btn" id="paste">貼り付けて読み込み</button>
+    </div>
+    <div class="label">プラグイン一覧</div>
+    <button class="btn" id="preset2" style="width:100%">📥 音源 ${PRESET.inst.length}件・プラグイン ${PRESET.fx.length}件を取り込む</button>
+    <p class="note" style="margin:6px 2px 0">登録済みの製品は重複して追加されません。</p>
+    <div class="label">リセット</div>
+    <button class="btn danger" id="reset" style="width:100%">すべてのデータを消して初期状態に戻す</button>
+    <div class="pad"></div>`;
+  document.getElementById('preset2').onclick=importPreset;
+  $app.querySelectorAll('.th').forEach(b=>b.onclick=()=>{S.skin=b.dataset.skin;save();applySkin();render();});
+  document.getElementById('animsw').onclick=()=>{S.anim = S.anim===false; save(); applySkin(); render();};
+  document.getElementById('fm1').onclick=()=>folderManager('inst');
+  document.getElementById('fm2').onclick=()=>folderManager('fx');
+  document.getElementById('exp').onclick=()=>{
+    const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`racknote-${today().replace(/\//g,'')}.json`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  };
+  document.getElementById('copy').onclick=async()=>{
+    try{ await navigator.clipboard.writeText(JSON.stringify(S)); toast('コピーしました'); }
+    catch(e){ sheet(`<h2>JSON</h2><div class="field"><textarea id="raw" readonly style="min-height:200px">${esc(JSON.stringify(S))}</textarea></div><p class="note">全選択してコピーしてください。</p>`); }
+  };
+  document.getElementById('impf').onchange=e=>{const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>importJSON(r.result); r.readAsText(f);};
+  document.getElementById('paste').onclick=()=>{
+    sheet(`<h2>JSONを貼り付け</h2><div class="field"><textarea id="raw" style="min-height:200px" placeholder="書き出したJSONを貼り付け"></textarea></div>
+      <p class="note">読み込むと、今のデータは置き換わります。</p><div class="btnrow"><button class="btn" data-close>やめる</button><button class="btn primary" id="doimp">読み込む</button></div>`,
+      el=>el.querySelector('#doimp').onclick=()=>importJSON(el.querySelector('#raw').value));
+  };
+  document.getElementById('reset').onclick=()=>confirmSheet('すべてのデータを消しますか？','登録した製品とアイデアがすべて消え、フォルダも初期状態に戻ります。元に戻せません。','消して初期化',()=>{S=defaults();save();V={...V,folder:null,product:null};render();toast('初期化しました');});
+}
+function importPreset(){
+  const ensure=(t,name)=>{ let f=S.folders[t].find(x=>x.name===name);
+    if(!f){ f={id:uid(),name,color:COLORS[S.folders[t].length%COLORS.length]}; S.folders[t].push(f); } return f; };
+  // フォルダをそろえて、並びを種類一覧の順にする（自作フォルダは後ろ）
+  [['fx',PRESET.fxFolders],['inst',PRESET.instFolders]].forEach(([t,list])=>{
+    list.forEach(n=>ensure(t,n));
+    const ord=n=>{const i=list.indexOf(n);return i<0?999:i;};
+    S.folders[t].sort((a,b)=>ord(a.name)-ord(b.name));
+  });
+  const have=new Set(S.products.map(p=>p.type+'|'+p.name.toLowerCase()));
+  let added=0;
+  [['fx',PRESET.fx],['inst',PRESET.inst]].forEach(([t,rows])=>rows.forEach(([name,maker,folder,format,memo,status])=>{
+    if(have.has(t+'|'+name.toLowerCase())) return;
+    S.products.push({id:uid(),type:t,folderId:ensure(t,folder).id,name,maker,format,memo,status:status||'own',rank:tidyRank(t,name),fav:false,ideas:[],price:'',date:'',url:'',created:Date.now()});
+    added++;}));
+  S.presetSeen=PRESET.inst.length+PRESET.fx.length; S.tidySeen=TIDY_VER; save(); render(); toast(`${added}件を取り込みました`);
+}
+// 整理結果（一軍／隠す／削除済み）を、登録済みの製品に反映する。何も消さない
+function applyTidy(){ let n=0;
+  S.products.forEach(p=>{ const r=tidyRank(p.type,p.name); if(r && p.rank!==r){ p.rank=r; n++; } const mm=TIDY_MEMO[p.name.toLowerCase()]; if(mm && !p.memo){ p.memo=mm; n++; } });
+  importPreset(); toast(`整理結果を反映しました（${n}件）`);
+}
+function importJSON(txt){
+  try{ const d=JSON.parse(txt); if(!d.folders||!Array.isArray(d.products)) throw 0;
+    S=d; save(); closeSheet(); render(); toast(`読み込みました（${d.products.length}件）`);
+  }catch(e){ toast('読み込めませんでした。RACK NOTE のJSONか確認してください'); }
+}
+
+// ≡ をつかんでドラッグする並べ替え（タッチ・マウス両対応）
+function makeSortable(box, sel, onEnd){
+  box.addEventListener('pointerdown', e=>{
+    const g=e.target.closest('.grip'); if(!g || !box.contains(g)) return;
+    const item=g.closest(sel); if(!item) return;
+    e.preventDefault(); item.classList.add('dragging');
+    try{ g.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const y=ev.clientY;
+      const sibs=[...box.querySelectorAll(sel)].filter(x=>x!==item);
+      let placed=false;
+      for(const s2 of sibs){ const r=s2.getBoundingClientRect();
+        if(y < r.top + r.height/2){ if(item.nextElementSibling!==s2) box.insertBefore(item,s2); placed=true; break; } }
+      if(!placed && box.lastElementChild!==item) box.appendChild(item);
+      if(y < 90) window.scrollBy(0,-10); else if(y > innerHeight-110) window.scrollBy(0,10);
+    };
+    const up=()=>{ g.removeEventListener('pointermove',move); g.removeEventListener('pointerup',up); g.removeEventListener('pointercancel',up);
+      item.classList.remove('dragging'); onEnd(); };
+    g.addEventListener('pointermove',move); g.addEventListener('pointerup',up); g.addEventListener('pointercancel',up);
+  });
+}
+function bindCommon(){ $app.querySelectorAll('[data-p]').forEach(b=>b.onclick=e=>{ if(e.target.closest('.grip')) return; openProduct(b.dataset.p); }); }
+function openProduct(id){ V.product=id; render(); window.scrollTo(0,0); }
+
+/* ---------- sheets ---------- */
+function sheet(html, onMount){
+  $layer.innerHTML = `<div class="scrim"><div class="sheet" role="dialog"><div class="grab"></div>${html}</div></div>`;
+  const scrim=$layer.firstChild;
+  scrim.addEventListener('click',e=>{ if(e.target===scrim || e.target.closest('[data-close]')) closeSheet(); });
+  onMount && onMount(scrim.querySelector('.sheet'));
+}
+function closeSheet(){ $layer.innerHTML=''; }
+function confirmSheet(title,msg,okLabel,ok){
+  sheet(`<h2>${esc(title)}</h2><p class="note" style="font-size:14px">${esc(msg)}</p>
+    <div class="btnrow"><button class="btn" data-close>やめる</button><button class="btn danger" id="ok">${esc(okLabel)}</button></div>`,
+    el=>el.querySelector('#ok').onclick=()=>{closeSheet();ok();});
+}
+
+function productForm(p){
+  const isNew = !p;
+  const d = p || { type:V.tab, folderId: V.folder || S.folders[V.tab][0]?.id, status:'own' };
+  let type = d.type, status = d.status, rank = d.rank || '', pcolor = d.color || '';
+  const folderOpts = t => S.folders[t].map(f=>`<option value="${f.id}" ${f.id===d.folderId?'selected':''}>${esc(f.name)}</option>`).join('');
+  sheet(`<h2>${isNew?'製品を追加':'製品を編集'}</h2>
+    <div class="field"><label for="pf-name">製品名 *</label><input id="pf-name" value="${esc(d.name)}" placeholder="例：Serum 2"></div>
+    <div class="field"><label for="pf-maker">メーカー</label><input id="pf-maker" value="${esc(d.maker)}" placeholder="例：Xfer Records"></div>
+    <div class="field"><label>種類</label><div class="toggle" id="pf-type">${Object.entries(TYPE).map(([k,l])=>`<button data-v="${k}" class="${type===k?'on':''}">${l}</button>`).join('')}</div></div>
+    <div class="field"><label for="pf-folder">フォルダ</label><select id="pf-folder">${folderOpts(type)}</select></div>
+    <div class="field"><label>状態</label><div class="toggle" id="pf-status">${Object.entries(STATUS).map(([k,l])=>`<button data-v="${k}" class="${status===k?'on':''}">${l}</button>`).join('')}</div></div>
+    <div class="field"><label>コレクション</label><div class="toggle" id="pf-rank">${[['','未設定'],...Object.entries(RANK)].map(([k,l])=>`<button data-v="${k}" class="${rank===k?'on':''}">${l}</button>`).join('')}</div></div>
+    <div class="two">
+      <div class="field"><label for="pf-format">形式</label><input id="pf-format" value="${esc(d.format)}" placeholder="VST3 / Kontakt"></div>
+      <div class="field"><label for="pf-price">価格</label><input id="pf-price" value="${esc(d.price)}" placeholder="¥12,000"></div>
+    </div>
+    <div class="field"><label for="pf-date">購入日</label><input id="pf-date" type="date" value="${esc(d.date)}"></div>
+    <div class="field"><label for="pf-url">リンク</label><input id="pf-url" type="url" value="${esc(d.url)}" placeholder="https://"></div>
+    <div class="field"><label>アイコンの色</label><div class="swatches" id="pf-color"><button class="same ${pcolor?'':'on'}" data-pc="">フォルダと同じ</button>${COLORS.map(c=>`<button style="--c:${c}" data-pc="${c}" class="${c===pcolor?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
+    <div class="field"><label for="pf-memo">メモ</label><textarea id="pf-memo" placeholder="特徴、よく使うプリセット、注意点など">${esc(d.memo)}</textarea></div>
+    <div class="btnrow">${isNew?'':'<button class="btn danger" id="pf-del">削除</button>'}<button class="btn primary" id="pf-save">${isNew?'追加する':'保存する'}</button></div>`,
+  el=>{
+    el.querySelectorAll('#pf-type button').forEach(b=>b.onclick=()=>{type=b.dataset.v;
+      el.querySelectorAll('#pf-type button').forEach(x=>x.classList.toggle('on',x===b));
+      el.querySelector('#pf-folder').innerHTML=folderOpts(type);});
+    el.querySelectorAll('#pf-status button').forEach(b=>b.onclick=()=>{status=b.dataset.v;
+      el.querySelectorAll('#pf-status button').forEach(x=>x.classList.toggle('on',x===b));});
+    el.querySelectorAll('#pf-rank button').forEach(b=>b.onclick=()=>{rank=b.dataset.v;
+      el.querySelectorAll('#pf-rank button').forEach(x=>x.classList.toggle('on',x===b));});
+    el.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{pcolor=b.dataset.pc; el.querySelectorAll('[data-pc]').forEach(x=>x.classList.toggle('on',x===b));});
+    el.querySelector('#pf-save').onclick=()=>{
+      const name=el.querySelector('#pf-name').value.trim();
+      if(!name){ el.querySelector('#pf-name').focus(); return toast('製品名を入力してください'); }
+      const v = { name, maker:el.querySelector('#pf-maker').value.trim(), type, folderId:el.querySelector('#pf-folder').value, status, rank,
+        format:el.querySelector('#pf-format').value.trim(), price:el.querySelector('#pf-price').value.trim(), date:el.querySelector('#pf-date').value,
+        url:el.querySelector('#pf-url').value.trim(), memo:el.querySelector('#pf-memo').value.trim(), color:pcolor };
+      if(isNew){ const np={id:uid(),fav:false,ideas:[],created:Date.now(),...v}; S.products.push(np); save(); closeSheet(); V.tab=type; V.product=np.id; render(); toast('追加しました'); }
+      else { Object.assign(p,v); save(); closeSheet(); V.tab=type; render(); toast('保存しました'); }
+    };
+    const del=el.querySelector('#pf-del');
+    if(del) del.onclick=()=>confirmSheet(`「${p.name}」を削除しますか？`,`アイデア ${p.ideas.length}件も一緒に消えます。`,'削除する',()=>{
+      S.products=S.products.filter(x=>x.id!==p.id); save(); V.product=null; render(); toast('削除しました');});
+    if(isNew) setTimeout(()=>el.querySelector('#pf-name').focus(),250);
+  });
+}
+
+function ideaForm(pid,iid){
+  const p=S.products.find(x=>x.id===pid), i=p.ideas.find(x=>x.id===iid);
+  sheet(`<h2>アイデアを編集</h2><p class="note" style="margin-top:-6px">${esc(p.name)}</p>
+    <div class="field"><textarea id="it">${esc(i.text)}</textarea></div>
+    <div class="btnrow"><button class="btn danger" id="idel">削除</button><button class="btn primary" id="isave">保存する</button></div>`,
+  el=>{
+    el.querySelector('#isave').onclick=()=>{const v=el.querySelector('#it').value.trim(); if(!v) return; i.text=v; save(); closeSheet(); render();};
+    el.querySelector('#idel').onclick=()=>{p.ideas=p.ideas.filter(x=>x.id!==iid); save(); closeSheet(); render(); toast('削除しました');};
+  });
+}
+
+function folderForm(t,f){
+  const isNew=!f; let color = f?.color || COLORS[S.folders[t].length % COLORS.length];
+  const cnt = f ? S.products.filter(p=>p.type===t && p.folderId===f.id).length : 0;
+  sheet(`<h2>${isNew?'フォルダを追加':'フォルダを編集'}<span class="note" style="font-weight:500"> ・ ${TYPE[t]}</span></h2>
+    <div class="field"><label for="ff-name">フォルダ名</label><input id="ff-name" value="${esc(f?.name)}" placeholder="例：アンビエント"></div>
+    <div class="field"><label>色</label><div class="swatches">${COLORS.map(c=>`<button style="--c:${c}" data-c="${c}" class="${c===color?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
+    <div class="btnrow">${isNew?'':'<button class="btn danger" id="ff-del">削除</button>'}<button class="btn primary" id="ff-save">${isNew?'追加する':'保存する'}</button></div>`,
+  el=>{
+    el.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{color=b.dataset.c; el.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===b));});
+    el.querySelector('#ff-save').onclick=()=>{const name=el.querySelector('#ff-name').value.trim(); if(!name) return toast('フォルダ名を入力してください');
+      if(isNew) S.folders[t].push({id:uid(),name,color}); else Object.assign(f,{name,color});
+      save(); closeSheet(); render(); toast(isNew?'フォルダを追加しました':'保存しました');};
+    const del=el.querySelector('#ff-del');
+    if(del) del.onclick=()=>{
+      if(S.folders[t].length<=1) return toast('最後のフォルダは削除できません');
+      confirmSheet(`「${f.name}」を削除しますか？`, cnt?`中の${cnt}件の製品は「未分類」フォルダへ移動します。`:'このフォルダは空です。','削除する',()=>{
+        S.folders[t]=S.folders[t].filter(x=>x.id!==f.id);
+        if(cnt){ let u=S.folders[t].find(x=>x.name==='未分類'); if(!u){u={id:uid(),name:'未分類',color:'#7f8aa8'};S.folders[t].push(u);}
+          S.products.forEach(p=>{if(p.type===t&&p.folderId===f.id)p.folderId=u.id;}); }
+        if(V.folder===f.id) V.folder=null; save(); render(); toast('削除しました');});
+    };
+  });
+}
+
+function folderManager(t){
+  const draw = el => {
+    el.querySelector('#fl').innerHTML = S.folders[t].map((f,i)=>`<div class="frow" data-fid="${f.id}" style="--c:${f.color}"><span class="grip">≡</span><span class="dot"></span><span class="nm">${esc(f.name)}</span>
+      <button data-up="${i}" ${i===0?'disabled style="opacity:.3"':''} aria-label="上へ">↑</button>
+      <button data-dn="${i}" ${i===S.folders[t].length-1?'disabled style="opacity:.3"':''} aria-label="下へ">↓</button>
+      <button data-ed="${f.id}" aria-label="編集">✎</button></div>`).join('');
+    el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const i=+b.dataset.up;[S.folders[t][i-1],S.folders[t][i]]=[S.folders[t][i],S.folders[t][i-1]];save();draw(el);render();});
+    el.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dn;[S.folders[t][i+1],S.folders[t][i]]=[S.folders[t][i],S.folders[t][i+1]];save();draw(el);render();});
+    el.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>folderForm(t,S.folders[t].find(f=>f.id===b.dataset.ed)));
+  };
+  const drag = el => makeSortable(el.querySelector('#fl'),'.frow',()=>{
+    const ids=[...el.querySelectorAll('[data-fid]')].map(x=>x.dataset.fid);
+    S.folders[t]=ids.map(id=>S.folders[t].find(f=>f.id===id)); save(); draw(el); render(); });
+  sheet(`<h2>${TYPE[t]}フォルダ</h2><p class="sortnote">≡ をドラッグするか ↑↓ で並べ替え、✎ で名前と色を変えられます</p><div class="list" id="fl"></div>
+    <div class="btnrow"><button class="btn" id="fadd">＋ フォルダを追加</button><button class="btn primary" data-close>完了</button></div>`,
+    el=>{draw(el); drag(el); el.querySelector('#fadd').onclick=()=>folderForm(t);});
+}
+
+/* ---------- global ---------- */
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  const g=b.dataset.go; if(V.tab!==g) V.q='';
+  V.tab=g; V.folder=null; V.product=null; closeSheet(); render(); window.scrollTo(0,0);
+});
+$fab.onclick=()=>productForm(null);
+applySkin();
+render();
+})();
+</script>
+</body>
+</html>
